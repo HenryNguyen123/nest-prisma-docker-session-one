@@ -2,18 +2,41 @@ version: "3.9"
 
 services:
   db:
-    image: mysql:8.0
-    container_name: mysqlContainer
+    image: postgres:17
+    container_name: postgresContainer
     restart: always
-    environment:
-      MYSQL_DATABASE: mysqNodejs
-      MYSQL_USER: admin
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_PASSWORD: 123456
+    environment:  
+      POSTGRES_DB: postgresNodejs
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
     ports:
-      - "3307:3306"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
 
 volumes:
-  db_data: 
+  db_data:
+
+
+
+
+# mysql
+# version: "3.9"
+
+# services:
+#   db:
+#     image: mysql:8.0
+#     container_name: mysqlContainer
+#     restart: always
+#     environment:
+#       MYSQL_DATABASE: mysqNodejs
+#       MYSQL_USER: admin
+#       MYSQL_ROOT_PASSWORD: 123456
+#       MYSQL_PASSWORD: 123456
+#     ports:
+#       - "3307:3306"
+#     volumes:
+#       - db_data:/var/lib/mysql
+
+# volumes:
+#   db_data: 
