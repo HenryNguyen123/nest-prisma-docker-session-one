@@ -29,3 +29,10 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+
+    - name: Deploy to Render
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: |
+        curl -X POST https://api.render.com/deploy/srv-d4e7073gk3sc73bht1q0 \
+        -H "Authorization: Bearer $RENDER_API_KEY"
