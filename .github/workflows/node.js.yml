@@ -1,42 +1,6 @@
 # # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-# name: Node.js CI
-
-# on:
-#   push:
-#     branches: [ "main" ]
-#   pull_request:
-#     branches: [ "main" ]
-
-# jobs:
-#   build:
-
-#     runs-on: ubuntu-latest
-
-#     strategy:
-#       matrix:
-#         node-version: [18.x, 20.x, 22.x]
-#         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-#     steps:
-#     - uses: actions/checkout@v4
-#     - name: Use Node.js ${{ matrix.node-version }}
-#       uses: actions/setup-node@v4
-#       with:
-#         node-version: ${{ matrix.node-version }}
-#         cache: 'npm'
-#     - run: npm ci
-#     - run: npm run build --if-present
-#     - run: npm test
-
-#     - name: Deploy to Render
-#       env:
-#         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-#       run: |
-#         curl -X POST https://api.render.com/deploy/srv-d4e7073gk3sc73bht1q0 \
-#         -H "Authorization: Bearer $RENDER_API_KEY"
-
 name: Node.js CI
 
 on:
@@ -47,33 +11,69 @@ on:
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Setup Node
+    - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: ${{ matrix.node-version }}
         cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    # Prisma generate always BEFORE build
-    - name: Generate Prisma Client
-      run: npx prisma generate
-
-    - name: Build app
-      run: npm run build
-
-    - name: Run tests
-      run: npm test
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
 
     - name: Deploy to Render
       env:
         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       run: |
         curl -X POST https://api.render.com/deploy/srv-d4e7073gk3sc73bht1q0 \
-          -H "Authorization: Bearer $RENDER_API_KEY"
+        -H "Authorization: Bearer $RENDER_API_KEY"
+
+# name: Node.js CI
+
+# on:
+#   push:
+#     branches: [ "main" ]
+#   pull_request:
+#     branches: [ "main" ]
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - uses: actions/checkout@v4
+
+#     - name: Setup Node
+#       uses: actions/setup-node@v4
+#       with:
+#         node-version: 18
+#         cache: 'npm'
+
+#     - name: Install dependencies
+#       run: npm ci
+
+#     # Prisma generate always BEFORE build
+#     - name: Generate Prisma Client
+#       run: npx prisma generate
+
+#     - name: Build app
+#       run: npm run build
+
+#     - name: Run tests
+#       run: npm test
+
+#     - name: Deploy to Render
+#       env:
+#         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+#       run: |
+#         curl -X POST https://api.render.com/deploy/srv-d4e7073gk3sc73bht1q0 \
+#           -H "Authorization: Bearer $RENDER_API_KEY"
