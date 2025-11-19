@@ -22,7 +22,14 @@ enum Role {
 model User {
   id      Int      @id @default(autoincrement())
   email   String   @unique
-  name    String?
+  userName    String @unique
+  password    String 
+  phone    Int?
+  firstName    String
+  lastName    String
+  avatar    String?
+  age    Int?
+  dob    DateTime?
   role    Role     @default(USER)
   posts   Post[]
   profile Profile?
