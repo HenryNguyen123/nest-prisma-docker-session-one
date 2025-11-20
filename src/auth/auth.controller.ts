@@ -30,7 +30,7 @@ export class AuthController {
         httpOnly: true,
         maxAge: 3600000, // 1 giờ
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       });
     }
     return data;
