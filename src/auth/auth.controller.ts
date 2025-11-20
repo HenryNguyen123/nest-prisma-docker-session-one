@@ -28,9 +28,9 @@ export class AuthController {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       response.cookie('JWT', data.DT.access_token, {
         httpOnly: true,
-        maxAge: 3600 * 1000, // 1 giờ
+        maxAge: 3600000, // 1 giờ
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'none',
       });
     }
     return data;
@@ -42,6 +42,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<IResponse> {
     try {
+      console.log('body la: ', body);
       const data = await this.authService.logout(body, req, res);
       return data;
     } catch (error: unknown) {

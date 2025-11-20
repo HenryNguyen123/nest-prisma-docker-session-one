@@ -109,6 +109,7 @@ export class AuthService {
       return responseError('Internal server error', -500);
     }
   }
+  // eslint-disable-next-line @typescript-eslint/require-await
   async logout(
     body: LogoutBody,
     req: Request,
@@ -122,15 +123,15 @@ export class AuthService {
       // }
 
       // Xóa cookie "JWT"
-      // eslint-disable-next-line @typescript-eslint/await-thenable
-      await res.clearCookie('JWT', {
+      const data = { path: body.path };
+      res.clearCookie('JWT', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
       });
-      const data = { path: body.path };
-      return responseSuccess('Đăng xuất thành công!', 0, data);
+      console.log('path name: ', data);
+      return responseSuccess('Logout successfuly!', 0, data);
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', -500);
