@@ -11,3 +11,8 @@ export interface RegisterType {
   dob?: Date | null;
   role: string;
 }
+
+export interface LoginType {
+  email: string;
+  userName: string;
+}
