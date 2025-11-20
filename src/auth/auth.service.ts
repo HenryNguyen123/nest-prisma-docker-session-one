@@ -116,6 +116,13 @@ export class AuthService {
     res: Response,
   ): Promise<IResponse> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const token = req.cookies?.JWT;
+
+      if (!token) {
+        console.log('JWT không tồn tại');
+        return responseError('JWT không tìm thấy', -1);
+      }
       const data = { path: body.path };
       res.clearCookie('JWT', {
         httpOnly: true,
