@@ -13,14 +13,14 @@ interface IResponse {
 export class AuthController {
   constructor(private authService: AuthService) {}
   @Post('register')
-  register(@Body() body: RegisterDto): Promise<any> {
+  register(@Body() body: RegisterDto): Promise<IResponse> {
     return this.authService.register(body);
   }
   @Post('login')
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<any> {
+  ): Promise<IResponse> {
     const data = await this.authService.login(body);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -29,8 +29,11 @@ export class AuthController {
       response.cookie('JWT', data.DT.access_token, {
         httpOnly: true,
         maxAge: 3600000, // 1 giờ
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        // secure: process.env.NODE_ENV === 'production',
+        // sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: true,
+        sameSite: 'none',
+        path: '/',
       });
     }
     return data;

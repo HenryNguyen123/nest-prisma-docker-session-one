@@ -126,8 +126,9 @@ export class AuthService {
       const data = { path: body.path };
       res.clearCookie('JWT', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true,
+        // secure: process.env.NODE_ENV === 'production',
+        sameSite: 'none',
         path: '/',
       });
       console.log('path name: ', data);
