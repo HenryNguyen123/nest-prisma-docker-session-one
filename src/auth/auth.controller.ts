@@ -28,7 +28,7 @@ export class AuthController {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       response.cookie('JWT', data.DT.access_token, {
         httpOnly: true,
-        maxAge: 3600000, // 1 giờ
+        maxAge: 3600, // 1 giờ
         // secure: process.env.NODE_ENV === 'production',
         // sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         // secure: true,
