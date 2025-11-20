@@ -136,7 +136,7 @@ export class AuthService {
       return responseSuccess('Logout successfuly!', 0, data);
     } catch (error: unknown) {
       console.log(error);
-      return responseError('Internal server error', -500);
+      return responseError('Internal server error', 503);
     }
   }
 }
