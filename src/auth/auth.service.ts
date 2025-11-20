@@ -4,7 +4,7 @@ import { RegisterDto, LoginDto } from './dtos/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { responseSuccess, responseError } from '../utils/response.utils';
-import type { RegisterType } from '../auth/types/auth.type';
+import type { RegisterType, LogoutBody } from '../auth/types/auth.type';
 import { Request, Response } from 'express';
 interface IResponse {
   EM: string;
@@ -64,10 +64,11 @@ export class AuthService {
         where: { userName: dataLogin.userName },
       });
       if (!user) {
-        throw new HttpException(
-          { message: 'Accout is not exist' },
-          HttpStatus.UNAUTHORIZED,
-        );
+        // throw new HttpException(
+        //   { message: 'Accout is not exist' },
+        //   HttpStatus.UNAUTHORIZED,
+        // );
+        return responseError('Nothing find user, fail', 1);
       }
       //check pass
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -76,10 +77,11 @@ export class AuthService {
         user.password,
       );
       if (!verify) {
-        throw new HttpException(
-          { message: 'password doese not correct' },
-          HttpStatus.UNAUTHORIZED,
-        );
+        // throw new HttpException(
+        //   { message: 'password doese not correct' },
+        //   HttpStatus.UNAUTHORIZED,
+        // );
+        return responseError('Please, check password or userName, fails', 1);
       }
       // generate access-token and refresh token
       const payload = {
@@ -107,14 +109,17 @@ export class AuthService {
       return responseError('Internal server error', -500);
     }
   }
-  async logout(req: Request, res: Response): Promise<IResponse> {
+  async logout(
+    body: LogoutBody,
+    req: Request,
+    res: Response,
+  ): Promise<IResponse> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const token = req.cookies?.JWT;
+      // const token = req.cookies?.JWT;
 
-      if (!token) {
-        return responseError('Không có token trong cookie', -1);
-      }
+      // if (!token) {
+      //   return responseError('Không có token trong cookie', -1);
+      // }
 
       // Xóa cookie "JWT"
       // eslint-disable-next-line @typescript-eslint/await-thenable
@@ -124,8 +129,8 @@ export class AuthService {
         sameSite: 'lax',
         path: '/',
       });
-
-      return responseSuccess('Đăng xuất thành công!', 0, null);
+      const data = { path: body.path };
+      return responseSuccess('Đăng xuất thành công!', 0, data);
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', -500);

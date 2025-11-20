@@ -16,3 +16,7 @@ export interface LoginType {
   email: string;
   userName: string;
 }
+
+export interface LogoutBody {
+  path: string;
+}

@@ -3,6 +3,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto, LoginDto } from 'src/auth/dtos/auth.dto';
 import type { Response, Request } from 'express';
 import { responseError } from 'src/utils/response.utils';
+import type { LogoutBody } from '../auth/types/auth.type';
 interface IResponse {
   EM: string;
   EC: number;
@@ -36,11 +37,12 @@ export class AuthController {
   }
   @Post('logout')
   async logout(
+    @Body() body: LogoutBody,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<IResponse> {
     try {
-      const data = await this.authService.logout(req, res);
+      const data = await this.authService.logout(body, req, res);
       return data;
     } catch (error: unknown) {
       console.log(error);
