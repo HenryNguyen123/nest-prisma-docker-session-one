@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { responseSuccess, responseError } from '../utils/response.utils';
 import type { RegisterType } from '../auth/types/auth.type';
+import { Request, Response } from 'express';
 interface IResponse {
   EM: string;
   EC: number;
@@ -101,6 +102,30 @@ export class AuthService {
         reset_token: resetToken,
         data: payload,
       });
+    } catch (error: unknown) {
+      console.log(error);
+      return responseError('Internal server error', -500);
+    }
+  }
+  async logout(req: Request, res: Response): Promise<IResponse> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const token = req.cookies?.JWT;
+
+      if (!token) {
+        return responseError('Không có token trong cookie', -1);
+      }
+
+      // Xóa cookie "JWT"
+      // eslint-disable-next-line @typescript-eslint/await-thenable
+      await res.clearCookie('JWT', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      });
+
+      return responseSuccess('Đăng xuất thành công!', 0, null);
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', -500);

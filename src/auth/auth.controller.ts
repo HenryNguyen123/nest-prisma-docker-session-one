@@ -1,7 +1,13 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto, LoginDto } from 'src/auth/dtos/auth.dto';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
+import { responseError } from 'src/utils/response.utils';
+interface IResponse {
+  EM: string;
+  EC: number;
+  DT: any;
+}
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -27,5 +33,18 @@ export class AuthController {
       });
     }
     return data;
+  }
+  @Post('logout')
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<IResponse> {
+    try {
+      const data = await this.authService.logout(req, res);
+      return data;
+    } catch (error: unknown) {
+      console.log(error);
+      return responseError('Internal server error', -500);
+    }
   }
 }
