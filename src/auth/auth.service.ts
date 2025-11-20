@@ -116,22 +116,14 @@ export class AuthService {
     res: Response,
   ): Promise<IResponse> {
     try {
-      // const token = req.cookies?.JWT;
-
-      // if (!token) {
-      //   return responseError('Không có token trong cookie', -1);
-      // }
-
-      // Xóa cookie "JWT"
       const data = { path: body.path };
-      const check = res.clearCookie('JWT', {
+      res.clearCookie('JWT', {
         httpOnly: true,
         secure: true,
         // secure: process.env.NODE_ENV === 'production',
         sameSite: 'none',
         path: '/',
       });
-      if (check) console.log('check jwt: ', check);
       console.log('path name: ', data);
       return responseSuccess('Logout successfuly!', 0, data);
     } catch (error: unknown) {
