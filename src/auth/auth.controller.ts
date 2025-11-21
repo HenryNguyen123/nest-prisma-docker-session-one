@@ -4,8 +4,8 @@ import {
   Body,
   Res,
   Req,
-  // HttpException,
-  // HttpStatus,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto, LoginDto } from 'src/auth/dtos/auth.dto';
@@ -27,11 +27,12 @@ export class AuthController {
       return data;
     } catch (error) {
       console.log('register error: ', error);
-
-      // throw new HttpException(
-      //   { message: 'register error' },
-      //   HttpStatus.UNAUTHORIZED,
-      // );
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'register error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
       return responseError('Internal server error', -500);
     }
   }
@@ -44,25 +45,25 @@ export class AuthController {
       const data = await this.authService.login(body);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (data && data.DT?.access_token) {
+        const isProduction = process.env.NODE_ENV === 'production';
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         response.cookie('JWT', data.DT.access_token, {
           httpOnly: true,
-          maxAge: 3600, // 1 giờ
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-          // secure: true,
-          // sameSite: 'none',
+          maxAge: 3600 * 1000,
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
           path: '/',
         });
       }
       return data;
     } catch (error) {
       console.log('login error: ', error);
-
-      // throw new HttpException(
-      //   { message: 'login error' },
-      //   HttpStatus.UNAUTHORIZED,
-      // );
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'login error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
       return responseError('Internal server error', -500);
     }
   }
@@ -77,19 +78,20 @@ export class AuthController {
       // Clear cookie trực tiếp
       res.clearCookie('JWT', {
         httpOnly: true,
-        secure: true, // Render HTTPS
-        sameSite: 'none', // cross-domain
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
       });
 
       return responseSuccess('Logout successfully!', 0, { path: body.path });
     } catch (error: unknown) {
       console.log('Logout error: ', error);
-
-      // throw new HttpException(
-      //   { message: 'Accout is not exist' },
-      //   HttpStatus.UNAUTHORIZED,
-      // );
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'logout error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
       return responseError('Internal server error', -500);
     }
     // try {
