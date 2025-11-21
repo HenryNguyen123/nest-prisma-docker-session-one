@@ -57,7 +57,7 @@ export class AuthController {
       return responseSuccess('Logout successfully!', 0, { path: body.path });
     } catch (error) {
       console.log('Logout error: ', error);
-      return responseError('Internal server error', -500);
+      return responseError(JSON.stringify(error), -500);
     }
     // try {
     //   console.log('body la: ', body);
