@@ -31,8 +31,8 @@ export class AuthController {
         maxAge: 3600, // 1 giờ
         // secure: process.env.NODE_ENV === 'production',
         // sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        // secure: true,
-        // sameSite: 'none',
+        secure: true,
+        sameSite: 'none',
         path: '/',
       });
     }
