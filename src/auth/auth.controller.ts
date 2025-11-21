@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Res, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  // HttpException,
+  // HttpStatus,
+} from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto, LoginDto } from 'src/auth/dtos/auth.dto';
 import type { Response, Request } from 'express';
@@ -13,30 +21,50 @@ interface IResponse {
 export class AuthController {
   constructor(private authService: AuthService) {}
   @Post('register')
-  register(@Body() body: RegisterDto): Promise<IResponse> {
-    return this.authService.register(body);
+  async cregister(@Body() body: RegisterDto): Promise<IResponse> {
+    try {
+      const data = await this.authService.register(body);
+      return data;
+    } catch (error) {
+      console.log('register error: ', error);
+
+      // throw new HttpException(
+      //   { message: 'register error' },
+      //   HttpStatus.UNAUTHORIZED,
+      // );
+      return responseError('Internal server error', -500);
+    }
   }
   @Post('login')
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<IResponse> {
-    const data = await this.authService.login(body);
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (data && data.DT?.access_token) {
+    try {
+      const data = await this.authService.login(body);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      response.cookie('JWT', data.DT.access_token, {
-        httpOnly: true,
-        maxAge: 3600, // 1 giờ
-        // secure: process.env.NODE_ENV === 'production',
-        // sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        secure: true,
-        sameSite: 'none',
-        path: '/',
-      });
+      if (data && data.DT?.access_token) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        response.cookie('JWT', data.DT.access_token, {
+          httpOnly: true,
+          maxAge: 3600, // 1 giờ
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+          // secure: true,
+          // sameSite: 'none',
+          path: '/',
+        });
+      }
+      return data;
+    } catch (error) {
+      console.log('login error: ', error);
+
+      // throw new HttpException(
+      //   { message: 'login error' },
+      //   HttpStatus.UNAUTHORIZED,
+      // );
+      return responseError('Internal server error', -500);
     }
-    return data;
   }
   @Post('logout')
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -55,9 +83,14 @@ export class AuthController {
       });
 
       return responseSuccess('Logout successfully!', 0, { path: body.path });
-    } catch (error) {
+    } catch (error: unknown) {
       console.log('Logout error: ', error);
-      return responseError(JSON.stringify(error), -500);
+
+      // throw new HttpException(
+      //   { message: 'Accout is not exist' },
+      //   HttpStatus.UNAUTHORIZED,
+      // );
+      return responseError('Internal server error', -500);
     }
     // try {
     //   console.log('body la: ', body);
