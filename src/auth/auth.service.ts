@@ -24,10 +24,13 @@ export class AuthService {
         where: { email: dataUser.email },
       });
       if (user) {
-        throw new HttpException(
-          { message: 'this email has been used' },
-          HttpStatus.BAD_REQUEST,
-        );
+        if (process.env.NODE_ENV === 'development') {
+          throw new HttpException(
+            { message: 'this email has been used error' },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        return responseError('User is exist, fail!', 1);
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const salt = await bcrypt.genSalt(10);
@@ -57,17 +60,19 @@ export class AuthService {
       return responseError('Internal server error', -500);
     }
   }
-  async login(dataLogin: LoginDto): Promise<IResponse> {
+  async login(dataLogin: LoginDto, response: Response): Promise<IResponse> {
     try {
       // check user
       const user = await this.prismaService.user.findUnique({
         where: { userName: dataLogin.userName },
       });
       if (!user) {
-        // throw new HttpException(
-        //   { message: 'Accout is not exist' },
-        //   HttpStatus.UNAUTHORIZED,
-        // );
+        if (process.env.NODE_ENV === 'development') {
+          throw new HttpException(
+            { message: 'check user login error' },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
         return responseError('Nothing find user, fail', 1);
       }
       //check pass
@@ -77,10 +82,12 @@ export class AuthService {
         user.password,
       );
       if (!verify) {
-        // throw new HttpException(
-        //   { message: 'password doese not correct' },
-        //   HttpStatus.UNAUTHORIZED,
-        // );
+        if (process.env.NODE_ENV === 'development') {
+          throw new HttpException(
+            { message: 'verify password error' },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
         return responseError('Please, check password or userName, fails', 1);
       }
       // generate access-token and refresh token
@@ -91,19 +98,41 @@ export class AuthService {
         avatar: user.avatar,
         age: user.age,
       };
+      const keyJWT = process.env.JWT_SECRET_KEY;
+      const keyJWTReset = process.env.JWT_SECRET_KEY_RESET;
       const accessToken = await this.jwtService.signAsync(payload, {
-        secret: process.env.JWT_SECRET_KEY,
+        secret: keyJWT,
         expiresIn: '1h',
       });
       const resetToken = await this.jwtService.signAsync(payload, {
-        secret: process.env.JWT_SECRET_KEY_RESET,
+        secret: keyJWTReset,
         expiresIn: '7d',
       });
-      return responseSuccess('Login user successfully!', 0, {
-        access_token: accessToken,
-        reset_token: resetToken,
-        data: payload,
+      // setup cookie client
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decoded = this.jwtService.verify(accessToken, {
+        secret: keyJWT,
       });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decodedReset = this.jwtService.verify(resetToken, {
+        secret: keyJWTReset,
+      });
+      if (decoded && decodedReset) {
+        const isProduction = process.env.NODE_ENV === 'production';
+        response.cookie('JWT', accessToken, {
+          httpOnly: true,
+          maxAge: 3600 * 1000,
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
+          path: '/',
+        });
+        return responseSuccess('Login user successfully!', 0, {
+          access_token: accessToken,
+          reset_token: resetToken,
+          data: payload,
+        });
+      }
+      return responseError('Login user fail!', 1);
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', -500);
@@ -120,15 +149,13 @@ export class AuthService {
       const token = req.cookies?.JWT;
 
       if (!token) {
-        console.log('JWT không tồn tại');
         return responseError('JWT không tìm thấy', -1);
       }
       const data = { path: body.path };
       res.clearCookie('JWT', {
         httpOnly: true,
-        secure: true,
-        // secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
       });
       console.log('path name: ', data);
