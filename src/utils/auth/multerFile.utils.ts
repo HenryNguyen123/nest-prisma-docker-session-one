@@ -12,7 +12,7 @@ export const multerImage = async (file: Express.Multer.File) => {
     const uniqueName =
       Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
     finalPath = join(uploadPath, uniqueName);
-    const url = `public/images/avatar/${uniqueName}`;
+    const url = `/public/images/avatar/${uniqueName}`;
     avatarUrl = url;
     // upload image avatar into public
     await fs.rename(file.path, finalPath);
