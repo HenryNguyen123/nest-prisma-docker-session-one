@@ -6,12 +6,16 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto, LoginDto } from 'src/auth/dtos/auth.dto';
 import type { Response, Request } from 'express';
 import { responseError } from 'src/utils/response.utils';
 import type { LogoutBody } from '../auth/types/auth.type';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Express } from 'express';
 interface IResponse {
   EM: string;
   EC: number;
@@ -21,9 +25,40 @@ interface IResponse {
 export class AuthController {
   constructor(private authService: AuthService) {}
   @Post('register')
-  async cregister(@Body() body: RegisterDto): Promise<IResponse> {
+  @UseInterceptors(FileInterceptor('avatar', { dest: 'tmp/' }))
+  // @UseInterceptors(
+  //   FileInterceptor('avatar', {
+  //     storage: diskStorage({
+  //       destination: (req, file, cb) => {
+  //         const uploadPath = join(
+  //           process.cwd(),
+  //           '..',
+  //           'public',
+  //           'images',
+  //           'avatar',
+  //         );
+  //         // tạo folder nếu chưa tồn tại
+  //         console.log('path disk: ', uploadPath);
+  //         if (!existsSync(uploadPath)) {
+  //           mkdirSync(uploadPath, { recursive: true });
+  //         }
+  //         cb(null, uploadPath);
+  //       },
+  //       filename: (req, file, cb) => {
+  //         const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+  //         const safeName = file.originalname.replace(/\s+/g, '-');
+  //         cb(null, `${unique}-${safeName}`);
+  //       },
+  //     }),
+  //   }),
+  // )
+  async register(
+    @Body() body: RegisterDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<IResponse> {
     try {
-      const data = await this.authService.register(body);
+      console.log('file controler: ', file);
+      const data = await this.authService.register(body, file);
       return data;
     } catch (error) {
       console.log('register error: ', error);

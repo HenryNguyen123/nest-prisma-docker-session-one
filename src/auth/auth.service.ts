@@ -6,6 +6,9 @@ import { JwtService } from '@nestjs/jwt';
 import { responseSuccess, responseError } from '../utils/response.utils';
 import type { RegisterType, LogoutBody } from '../auth/types/auth.type';
 import { Request, Response } from 'express';
+import { existsSync, promises as fs } from 'fs';
+import { join } from 'path';
+
 interface IResponse {
   EM: string;
   EC: number;
@@ -17,7 +20,10 @@ export class AuthService {
     private prismaService: PrismaService,
     private jwtService: JwtService,
   ) {}
-  async register(dataUser: RegisterDto): Promise<IResponse> {
+  async register(
+    dataUser: RegisterDto,
+    file: Express.Multer.File,
+  ): Promise<IResponse> {
     try {
       //check user
       const user = await this.prismaService.user.findUnique({
@@ -36,7 +42,23 @@ export class AuthService {
       const salt = await bcrypt.genSalt(10);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const hashPassword = await bcrypt.hash(dataUser.password, salt);
+      // setup file image avatar
+      let avatarUrl: string | null = null;
+      let finalPath: string = '';
+      console.log('avatar service: ', file);
+      if (file) {
+        const uploadPath = join(process.cwd(), 'public', 'images', 'avatar');
+        if (!existsSync(uploadPath))
+          await fs.mkdir(uploadPath, { recursive: true });
 
+        const uniqueName =
+          Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
+        finalPath = join(uploadPath, uniqueName);
+        const url = `/public/images/avatar/${uniqueName}`;
+        avatarUrl = url;
+      }
+      // upload image avatar into public
+      await fs.rename(file.path, finalPath);
       // step3: create user
       const res: RegisterType = await this.prismaService.user.create({
         data: {
@@ -47,13 +69,12 @@ export class AuthService {
           phone: Number(dataUser.phone),
           firstName: dataUser.firstName ?? '',
           lastName: dataUser.lastName ?? '',
-          avatar: dataUser.avatar,
+          avatar: avatarUrl,
           age: dataUser.age,
           dob: dataUser.dob ? new Date(dataUser.dob) : undefined,
           role: 'USER',
         },
       });
-
       return responseSuccess('created user successfully!', 0, res);
     } catch (error: unknown) {
       console.log(error);
