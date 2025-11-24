@@ -1,13 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { RegisterDto, LoginDto } from './dtos/auth.dto';
-import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { responseSuccess, responseError } from '../utils/response.utils';
 import type { RegisterType, LogoutBody } from '../auth/types/auth.type';
 import { Request, Response } from 'express';
-import { existsSync, promises as fs } from 'fs';
-import { join } from 'path';
+import { hashPassword, checkPassword } from '../utils/auth/password.utils';
+import { multerImage } from '../utils/auth/multerFile.utils';
 
 interface IResponse {
   EM: string;
@@ -22,10 +21,10 @@ export class AuthService {
   ) {}
   async register(
     dataUser: RegisterDto,
-    file: Express.Multer.File,
+    file?: Express.Multer.File,
   ): Promise<IResponse> {
     try {
-      //check user
+      //step1:check user
       const user = await this.prismaService.user.findUnique({
         where: { email: dataUser.email },
       });
@@ -38,39 +37,29 @@ export class AuthService {
         }
         return responseError('User is exist, fail!', 1);
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const salt = await bcrypt.genSalt(10);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const hashPassword = await bcrypt.hash(dataUser.password, salt);
-      // setup file image avatar
-      let avatarUrl: string | null = null;
-      let finalPath: string = '';
-      console.log('avatar service: ', file);
-      if (file) {
-        const uploadPath = join(process.cwd(), 'public', 'images', 'avatar');
-        if (!existsSync(uploadPath))
-          await fs.mkdir(uploadPath, { recursive: true });
 
-        const uniqueName =
-          Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
-        finalPath = join(uploadPath, uniqueName);
-        const url = `/public/images/avatar/${uniqueName}`;
-        avatarUrl = url;
+      //step2:change password
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const hashPass = await hashPassword(dataUser.password);
+
+      // step3: setup file image avatar
+      let avatarUrl: string | null = null;
+      if (file) {
+        const multerImg = await multerImage(file);
+        avatarUrl = multerImg;
       }
-      // upload image avatar into public
-      await fs.rename(file.path, finalPath);
-      // step3: create user
+      // step4: create user
       const res: RegisterType = await this.prismaService.user.create({
         data: {
           email: dataUser.email,
           userName: dataUser.userName,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          password: hashPassword,
+          password: hashPass,
           phone: Number(dataUser.phone),
           firstName: dataUser.firstName ?? '',
           lastName: dataUser.lastName ?? '',
           avatar: avatarUrl,
-          age: dataUser.age,
+          age: dataUser.age ? parseInt(dataUser.age.toString()) : null,
           dob: dataUser.dob ? new Date(dataUser.dob) : undefined,
           role: 'USER',
         },
@@ -97,8 +86,7 @@ export class AuthService {
         return responseError('Nothing find user, fail', 1);
       }
       //check pass
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const verify: boolean = await bcrypt.compare(
+      const verify: boolean = await checkPassword(
         dataLogin.password,
         user.password,
       );

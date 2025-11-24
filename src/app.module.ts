@@ -16,7 +16,7 @@ import { join } from 'path';
     AuthModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '..', 'public'),
-      serveRoot: '/public/',
+      serveRoot: '/public',
     }),
     MulterModule.register({
       dest: join(process.cwd(), '..', 'public', 'images', 'avatar'),

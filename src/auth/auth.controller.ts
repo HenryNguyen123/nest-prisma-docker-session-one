@@ -54,7 +54,7 @@ export class AuthController {
   // )
   async register(
     @Body() body: RegisterDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<IResponse> {
     try {
       console.log('file controler: ', file);
