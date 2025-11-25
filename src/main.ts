@@ -18,6 +18,7 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'public'), {
     prefix: '/public/',
   });
+  console.log('Production template dir:', join(__dirname, 'templates'));
   await app.listen(process.env.PORT ?? 4000);
 }
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

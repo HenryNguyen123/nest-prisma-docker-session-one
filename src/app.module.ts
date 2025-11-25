@@ -39,6 +39,9 @@ const templateDir = isDev
           user: process.env.EMAIL_USER, // email gửi
           pass: process.env.EMAIL_PASS, // app password nếu dùng Gmail
         },
+        tls: {
+          rejectUnauthorized: false,
+        },
       },
       defaults: {
         from: '"No Reply" <no-reply@example.com>',
