@@ -65,3 +65,9 @@ export class LoginDto {
   @MaxLength(20)
   password: string;
 }
+
+export class ForgetDto {
+  @IsNotEmpty({ message: 'Email should not be empty' })
+  @IsEmail({}, { message: 'Invalid email address' })
+  email: string;
+}

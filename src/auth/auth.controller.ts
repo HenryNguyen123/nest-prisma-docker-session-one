@@ -8,12 +8,15 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
+  Query,
+  Get,
+  Put,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto, LoginDto } from 'src/auth/dtos/auth.dto';
 import type { Response, Request } from 'express';
-import { responseError } from 'src/utils/response.utils';
-import type { LogoutBody } from '../auth/types/auth.type';
+import { responseError, responseSuccess } from 'src/utils/response.utils';
+import type { LogoutBody, ResetPasswordType } from '../auth/types/auth.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Express } from 'express';
 interface IResponse {
@@ -110,6 +113,47 @@ export class AuthController {
   ): Promise<IResponse> {
     try {
       const data = await this.authService.logout(body, req, res);
+      return data;
+    } catch (error: unknown) {
+      console.log('Logout error: ', error);
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'logout error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      return responseError('Internal server error', -500);
+    }
+  }
+  @Get('verify-reset-token')
+  async verifyResetToken(@Query('token') token: string): Promise<IResponse> {
+    try {
+      await this.authService.verifyResetToken(token);
+      return responseSuccess('Token valid', 0, []);
+    } catch (error: unknown) {
+      console.log('Logout error: ', error);
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'logout error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      return responseError('Internal server error', -500);
+    }
+  }
+  @Put('reset-password')
+  async resetPassword(
+    @Body() body: ResetPasswordType,
+    @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
+  ): Promise<IResponse> {
+    try {
+      //step1: get handle service
+      const data = await this.authService.resetPassword(
+        body,
+        response,
+        request,
+      );
       return data;
     } catch (error: unknown) {
       console.log('Logout error: ', error);

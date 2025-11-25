@@ -3,21 +3,29 @@ import { PrismaService } from '../prisma.service';
 import { RegisterDto, LoginDto } from './dtos/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { responseSuccess, responseError } from '../utils/response.utils';
-import type { RegisterType, LogoutBody } from '../auth/types/auth.type';
+import type {
+  RegisterType,
+  LogoutBody,
+  ResetPasswordType,
+} from '../auth/types/auth.type';
 import { Request, Response } from 'express';
 import { hashPassword, checkPassword } from '../utils/auth/password.utils';
 import { multerImage } from '../utils/auth/multerFile.utils';
+import type { IResponse } from '../types/response/res.types';
+import { verifyJWT } from '../utils/jwt/jwt.utils';
+import { MailService } from 'src/mail/mail.service';
 
-interface IResponse {
-  EM: string;
-  EC: number;
-  DT: any;
-}
+// interface IResponse {
+//   EM: string;
+//   EC: number;
+//   DT: any;
+// }
 @Injectable()
 export class AuthService {
   constructor(
     private prismaService: PrismaService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
   async register(
     dataUser: RegisterDto,
@@ -108,24 +116,25 @@ export class AuthService {
         age: user.age,
       };
       const keyJWT = process.env.JWT_SECRET_KEY;
-      const keyJWTReset = process.env.JWT_SECRET_KEY_RESET;
+      const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
       const accessToken = await this.jwtService.signAsync(payload, {
         secret: keyJWT,
         expiresIn: '1h',
       });
-      const resetToken = await this.jwtService.signAsync(payload, {
+      const resetToken: string = await this.jwtService.signAsync(payload, {
         secret: keyJWTReset,
         expiresIn: '7d',
       });
       // setup cookie client
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const decoded = this.jwtService.verify(accessToken, {
+      const decoded = await this.jwtService.verify(accessToken, {
         secret: keyJWT,
       });
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const decodedReset = this.jwtService.verify(resetToken, {
-        secret: keyJWTReset,
-      });
+      const decodedReset = await verifyJWT(resetToken, keyJWTReset);
+      // this.jwtService.verify(resetToken, {
+      //   secret: keyJWTReset,
+      // });
       if (decoded && decodedReset) {
         const isProduction = process.env.NODE_ENV === 'production';
         response.cookie('JWT', accessToken, {
@@ -172,6 +181,104 @@ export class AuthService {
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', 503);
+    }
+  }
+  async verifyResetToken(token: string) {
+    try {
+      const key = process.env.JWT_SECRET_KEY_FORGOT_PASSWORD ?? '';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decode = await verifyJWT(token, key);
+      const data = {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        email: decode.email,
+        success: true,
+      };
+      return responseSuccess('verify reset token, successfuly!', 1, data);
+    } catch (error) {
+      console.log(error);
+      return responseError('Internal server error', -500);
+    }
+  }
+  async resetPassword(
+    body: ResetPasswordType,
+    response: Response,
+    request: Request,
+  ): Promise<IResponse> {
+    try {
+      //step1: check verify jwt
+      const key = process.env.JWT_SECRET_KEY_FORGOT_PASSWORD ?? '';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const token: string = request.cookies['FORGETPASS'];
+      if (!token) {
+        if (process.env.NODE_ENV === 'development') {
+          throw new HttpException(
+            { message: 'Cant not find token, error' },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        return responseError('reset pass can not find token, error', 1);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decode = await verifyJWT(token, key);
+      if (!decode) {
+        if (process.env.NODE_ENV === 'development') {
+          throw new HttpException(
+            { message: 'reset pass can not find jwt, error' },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        return responseError('reset pass can not find jwt, error', 1);
+      }
+      //step2: check  email
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const rawEmail = decode?.email ?? decode?.payload?.email;
+      const email = String(rawEmail).trim();
+      if (!email) {
+        if (process.env.NODE_ENV === 'development') {
+          throw new HttpException(
+            { message: 'reset pass can not find emal, error' },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        return responseError('reset pass can not find emal, error', 1);
+      }
+      // step: check user
+      const user = await this.prismaService.user.findUnique({
+        where: { email: email },
+      });
+      if (!user) {
+        if (process.env.NODE_ENV === 'development') {
+          throw new HttpException(
+            { message: 'reset pass can not find user, error' },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        return responseError('reset pass can not find user, error', 1);
+      }
+
+      // step3: hash password and update password user
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const hashPass = await hashPassword(body.resetPassword);
+      const data = await this.prismaService.user.update({
+        where: {
+          email: email,
+        },
+        data: {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          password: hashPass,
+        },
+      });
+      //step4: clear cookie forgot password and login
+      response.clearCookie('FORGETPASS');
+      response.clearCookie('JWT');
+      //step5: send mail change password success
+      if (data) {
+        await this.mailService.sendMailConfirmForgotPassword(email);
+      }
+      return responseSuccess('reset password successfuly!', 0, []);
+    } catch (error: unknown) {
+      console.log(error);
+      return responseError('Internal server error', -500);
     }
   }
 }

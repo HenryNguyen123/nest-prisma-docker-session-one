@@ -20,3 +20,7 @@ export interface LoginType {
 export interface LogoutBody {
   path: string;
 }
+
+export interface ResetPasswordType {
+  resetPassword: string;
+}
