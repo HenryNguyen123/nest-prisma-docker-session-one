@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && [ -d src/templates ] && cp -r src/templates dist/templates || echo 'No templates folder, skip copy'",
+    "build": "nest build && xcopy src\\templates dist\\templates /E /I /Y",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
