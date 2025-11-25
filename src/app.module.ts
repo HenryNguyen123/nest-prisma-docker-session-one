@@ -34,7 +34,7 @@ const templateDir = isDev
       transport: {
         host: 'smtp.gmail.com', // host SMTP
         port: 587, // port SSL
-        secure: true,
+        secure: false,
         auth: {
           user: process.env.EMAIL_USER, // email gửi
           pass: process.env.EMAIL_PASS, // app password nếu dùng Gmail
