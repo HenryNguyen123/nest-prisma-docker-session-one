@@ -26,7 +26,7 @@ export class MailService {
       const user = await this.prismaService.user.findUnique({
         where: { email: body.email },
       });
-      if (user) {
+      if (!user) {
         if (process.env.NODE_ENV === 'development') {
           throw new HttpException(
             { message: 'check user login error' },
@@ -64,6 +64,9 @@ export class MailService {
       } else {
         url = `http://localhost:${process.env.PORT}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
       }
+      const datacheck = { user: user, token: token, url: url };
+      return responseSuccess('send mail forget password successfuly', 0, datacheck);
+
       await this.mailerService.sendMail({
         to: body.email,
         subject: 'Get reset password.',
