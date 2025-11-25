@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
+import { MailService } from 'src/mail/mail.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -11,6 +12,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         JwtService,
+        MailService,
         { provide: PrismaService, useValue: {} }, // mock PrismaService
       ],
     }).compile();
