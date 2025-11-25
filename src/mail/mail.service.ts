@@ -26,7 +26,7 @@ export class MailService {
       const user = await this.prismaService.user.findUnique({
         where: { email: body.email },
       });
-      if (!user) {
+      if (user) {
         if (process.env.NODE_ENV === 'development') {
           throw new HttpException(
             { message: 'check user login error' },
