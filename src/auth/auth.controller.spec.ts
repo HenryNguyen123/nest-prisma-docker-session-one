@@ -4,6 +4,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { MailService } from 'src/mail/mail.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -15,6 +16,7 @@ describe('AuthController', () => {
         AuthService,
         JwtService,
         MailService,
+        MailerService,
         { provide: PrismaService, useValue: {} }, // mock PrismaService
       ],
     }).compile();

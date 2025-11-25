@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { MailService } from 'src/mail/mail.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -13,6 +14,7 @@ describe('AuthService', () => {
         AuthService,
         JwtService,
         MailService,
+        MailerService,
         { provide: PrismaService, useValue: {} }, // mock PrismaService
       ],
     }).compile();
