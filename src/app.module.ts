@@ -13,10 +13,10 @@ import { MailModule } from './mail/mail.module';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PrismaModule } from 'src/prisma.module';
 
-// const uploadPath = join(__dirname, '..', 'public', 'images', 'avatar');
-// if (!existsSync(uploadPath)) {
-//   mkdirSync(uploadPath, { recursive: true });
-// }
+const isDev = process.env.NODE_ENV !== 'production';
+const templateDir = isDev
+  ? join(process.cwd(), 'templates')
+  : join(__dirname, 'templates');
 @Module({
   imports: [
     AuthModule,
@@ -33,7 +33,7 @@ import { PrismaModule } from 'src/prisma.module';
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com', // host SMTP
-        port: 465, // port SSL
+        port: 587, // port SSL
         secure: true,
         auth: {
           user: process.env.EMAIL_USER, // email gửi
@@ -44,7 +44,7 @@ import { PrismaModule } from 'src/prisma.module';
         from: '"No Reply" <no-reply@example.com>',
       },
       template: {
-        dir: join(__dirname, '..', 'templates'), // folder chứa file email template
+        dir: templateDir, // folder chứa file email template
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,

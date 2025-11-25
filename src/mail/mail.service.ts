@@ -64,12 +64,12 @@ export class MailService {
       } else {
         url = `http://localhost:${process.env.PORT}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
       }
-      const datacheck = { user: user, token: token, url: url };
-      return responseSuccess(
-        'send mail forget password successfuly',
-        0,
-        datacheck,
-      );
+      // const datacheck = { user: user, token: token, url: url };
+      // return responseSuccess(
+      //   'send mail forget password successfuly',
+      //   0,
+      //   datacheck,
+      // );
 
       await this.mailerService.sendMail({
         to: body.email,
