@@ -28,12 +28,12 @@ export class MailService {
         where: { email: body.email },
       });
       if (!user) {
-        if (process.env.NODE_ENV !== 'development') {
-          throw new HttpException(
-            { message: 'check user login error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
+        // if (process.env.NODE_ENV !== 'development') {
+        //   throw new HttpException(
+        //     { message: 'check user login error' },
+        //     HttpStatus.UNAUTHORIZED,
+        //   );
+        // }
         return responseError('Nothing find user, fail', 1);
       }
       //step1: set data in token with jwt
@@ -72,29 +72,29 @@ export class MailService {
       //   datacheck,
       // );
 
-      try {
-        if (process.env.NODE_ENV === 'development') {
-          await this.mailerService.sendMail({
-            to: body.email,
-            // to: body.email,
-            subject: 'Get reset password.',
-            template: './auth/forgetPassword',
-            context: {
-              data: body,
-              url: url,
-            },
-          });
-        }
-      } catch (error: unknown) {
-        console.log(error);
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'reset pass can not find emal, error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
-        return responseError('reset pass can not find email, error', 1);
+      // try {
+      if (process.env.NODE_ENV === 'development') {
+        await this.mailerService.sendMail({
+          to: body.email,
+          // to: body.email,
+          subject: 'Get reset password.',
+          template: './auth/forgetPassword',
+          context: {
+            data: body,
+            url: url,
+          },
+        });
       }
+      // } catch (error: unknown) {
+      //   console.log(error);
+      //   if (process.env.NODE_ENV === 'development') {
+      //     throw new HttpException(
+      //       { message: 'reset pass can not find emal, error' },
+      //       HttpStatus.UNAUTHORIZED,
+      //     );
+      //   }
+      //   return responseError('reset pass can not find email, error', 1);
+      // }
       return responseSuccess('send mail forget password successfuly', 0, []);
     } catch (error: unknown) {
       console.log(error);
