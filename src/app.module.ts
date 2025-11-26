@@ -42,9 +42,9 @@ import { PrismaModule } from 'src/prisma.module';
           user: process.env.BREVO_LOGIN, // email gửi
           pass: process.env.BREVO_SMTP_KEY, // app password nếu dùng Gmail
         },
-        tls: {
-          rejectUnauthorized: false,
-        },
+        // tls: {
+        //   rejectUnauthorized: false,
+        // },
       },
       defaults: {
         from: '"No Reply" <no-reply@example.com>',
