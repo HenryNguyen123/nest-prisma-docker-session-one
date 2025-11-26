@@ -13,10 +13,6 @@ import { MailModule } from './mail/mail.module';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PrismaModule } from 'src/prisma.module';
 
-// const isDev = process.env.NODE_ENV !== 'production';
-// const templateDir = isDev
-//   ? join(process.cwd(), 'templates')
-//   : join(process.cwd(), 'dist', 'templates');
 @Module({
   imports: [
     AuthModule,
@@ -32,22 +28,23 @@ import { PrismaModule } from 'src/prisma.module';
     //step2: setup mailer
     MailerModule.forRoot({
       transport: {
-        // host: 'smtp.gmail.com', // host SMTP
-        host: 'smtp-relay.brevo.com', // host SMTP
+        host: 'smtp.gmail.com', // host SMTP
+        // host: 'smtp-relay.brevo.com', // host SMTP
         port: 587, // port SSL
         secure: false,
         auth: {
-          // user: process.env.EMAIL_USER, // email gửi
-          // pass: process.env.EMAIL_PASS, // app password nếu dùng Gmail
-          user: process.env.BREVO_LOGIN, // email gửi
-          pass: process.env.BREVO_SMTP_KEY, // app password nếu dùng Gmail
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+          // user: process.env.BREVO_LOGIN,
+          // pass: process.env.BREVO_SMTP_KEY,
         },
-        // tls: {
-        //   rejectUnauthorized: false,
-        // },
+        tls: {
+          rejectUnauthorized: false,
+        },
       },
       defaults: {
         from: '"No Reply" <no-reply@example.com>',
+        // from: `"No Reply" <${process.env.BREVO_LOGIN}>`,
       },
       template: {
         dir: join(process.cwd(), 'dist', 'templates'), // folder chứa file email template

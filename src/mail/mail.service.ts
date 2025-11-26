@@ -111,16 +111,19 @@ export class MailService {
       } else {
         url = `http://localhost:${process.env.PORT}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
       }
-      await this.mailerService.sendMail({
-        to: email,
-        subject: 'Change password successfuly.',
-        template: './auth/confirmForgetPassword',
-        context: {
-          email: email,
-          time: time,
-          resetUrl: url,
-        },
-      });
+      const isDev = process.env.NODE_ENV !== 'production';
+      if (isDev) {
+        await this.mailerService.sendMail({
+          to: email,
+          subject: 'Change password successfuly.',
+          template: './auth/confirmForgetPassword',
+          context: {
+            email: email,
+            time: time,
+            resetUrl: url,
+          },
+        });
+      }
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', -500);
