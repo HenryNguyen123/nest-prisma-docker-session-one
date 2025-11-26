@@ -13,10 +13,10 @@ import { MailModule } from './mail/mail.module';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PrismaModule } from 'src/prisma.module';
 
-const isDev = process.env.NODE_ENV !== 'production';
-const templateDir = isDev
-  ? join(process.cwd(), 'dist', 'templates')
-  : join(process.cwd(), 'dist', 'templates');
+// const isDev = process.env.NODE_ENV !== 'production';
+// const templateDir = isDev
+//   ? join(process.cwd(), 'templates')
+//   : join(process.cwd(), 'dist', 'templates');
 @Module({
   imports: [
     AuthModule,
@@ -47,7 +47,7 @@ const templateDir = isDev
         from: '"No Reply" <no-reply@example.com>',
       },
       template: {
-        dir: templateDir, // folder chứa file email template
+        dir: join(process.cwd(), 'dist', 'templates'), // folder chứa file email template
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,
