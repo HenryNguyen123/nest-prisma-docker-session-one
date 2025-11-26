@@ -15,7 +15,7 @@ import { PrismaModule } from 'src/prisma.module';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const templateDir = isDev
-  ? join(process.cwd(), 'src', 'templates')
+  ? join(process.cwd(), 'dist', 'templates')
   : join(process.cwd(), 'dist', 'templates');
 @Module({
   imports: [
