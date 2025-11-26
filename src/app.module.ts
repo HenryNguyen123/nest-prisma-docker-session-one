@@ -32,12 +32,15 @@ import { PrismaModule } from 'src/prisma.module';
     //step2: setup mailer
     MailerModule.forRoot({
       transport: {
-        host: 'smtp.gmail.com', // host SMTP
+        // host: 'smtp.gmail.com', // host SMTP
+        host: 'smtp-relay.brevo.com', // host SMTP
         port: 587, // port SSL
         secure: false,
         auth: {
-          user: process.env.EMAIL_USER, // email gửi
-          pass: process.env.EMAIL_PASS, // app password nếu dùng Gmail
+          // user: process.env.EMAIL_USER, // email gửi
+          // pass: process.env.EMAIL_PASS, // app password nếu dùng Gmail
+          user: process.env.BREVO_LOGIN, // email gửi
+          pass: process.env.BREVO_SMTP_KEY, // app password nếu dùng Gmail
         },
         tls: {
           rejectUnauthorized: false,
