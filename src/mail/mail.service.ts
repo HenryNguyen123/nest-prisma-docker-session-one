@@ -28,7 +28,7 @@ export class MailService {
         where: { email: body.email },
       });
       if (!user) {
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV !== 'development') {
           throw new HttpException(
             { message: 'check user login error' },
             HttpStatus.UNAUTHORIZED,
