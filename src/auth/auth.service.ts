@@ -85,12 +85,12 @@ export class AuthService {
         where: { userName: dataLogin.userName },
       });
       if (!user) {
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'check user login error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //   throw new HttpException(
+        //     { message: 'check user login error' },
+        //     HttpStatus.UNAUTHORIZED,
+        //   );
+        // }
         return responseError('Nothing find user, fail', 1);
       }
       //check pass
@@ -99,12 +99,12 @@ export class AuthService {
         user.password,
       );
       if (!verify) {
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'verify password error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //   throw new HttpException(
+        //     { message: 'verify password error' },
+        //     HttpStatus.UNAUTHORIZED,
+        //   );
+        // }
         return responseError('Please, check password or userName, fails', 1);
       }
       // generate access-token and refresh token
@@ -210,50 +210,62 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const token: string = request.cookies['FORGETPASS'];
       if (!token) {
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'Cant not find token, error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
-        return responseError('reset pass can not find token, error', 1);
+        // if (process.env.NODE_ENV === 'development') {
+        //   throw new HttpException(
+        //     { message: 'Cant not find token, error' },
+        //     HttpStatus.UNAUTHORIZED,
+        //   );
+        // }
+        return responseError(
+          'Password reset token has expired or is no longer valid.',
+          1,
+        );
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const decode = await verifyJWT(token, key);
       if (!decode) {
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'reset pass can not find jwt, error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
-        return responseError('reset pass can not find jwt, error', 1);
+        // if (process.env.NODE_ENV === 'development') {
+        //   throw new HttpException(
+        //     { message: 'reset pass can not find jwt, error' },
+        //     HttpStatus.UNAUTHORIZED,
+        //   );
+        // }
+        return responseError(
+          'Password reset token has expired or is no longer valid.',
+          1,
+        );
       }
       //step2: check  email
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const rawEmail = decode?.email ?? decode?.payload?.email;
       const email = String(rawEmail).trim();
       if (!email) {
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'reset pass can not find emal, error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
-        return responseError('reset pass can not find emal, error', 1);
+        // if (process.env.NODE_ENV === 'development') {
+        //   throw new HttpException(
+        //     { message: 'reset pass can not find emal, error' },
+        //     HttpStatus.UNAUTHORIZED,
+        //   );
+        // }
+        return responseError(
+          'Unable to retrieve email from the reset password token.',
+          1,
+        );
       }
       // step: check user
       const user = await this.prismaService.user.findUnique({
         where: { email: email },
       });
       if (!user) {
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'reset pass can not find user, error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
-        return responseError('reset pass can not find user, error', 1);
+        // if (process.env.NODE_ENV === 'development') {
+        //   throw new HttpException(
+        //     { message: 'reset pass can not find user, error' },
+        //     HttpStatus.UNAUTHORIZED,
+        //   );
+        // }
+        return responseError(
+          'Your account information is incorrect or does not exist. Please check again.',
+          1,
+        );
       }
 
       // step3: hash password and update password user
@@ -275,7 +287,7 @@ export class AuthService {
       if (data) {
         await this.mailService.sendMailConfirmForgotPassword(email);
       }
-      return responseSuccess('reset password successfuly!', 0, []);
+      return responseSuccess('Password has been reset successfully!', 0, []);
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', -500);

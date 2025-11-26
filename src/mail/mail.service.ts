@@ -73,16 +73,18 @@ export class MailService {
       // );
 
       try {
-        await this.mailerService.sendMail({
-          to: body.email,
-          // to: body.email,
-          subject: 'Get reset password.',
-          template: './auth/forgetPassword',
-          context: {
-            data: body,
-            url: url,
-          },
-        });
+        if (process.env.NODE_ENV === 'development') {
+          await this.mailerService.sendMail({
+            to: body.email,
+            // to: body.email,
+            subject: 'Get reset password.',
+            template: './auth/forgetPassword',
+            context: {
+              data: body,
+              url: url,
+            },
+          });
+        }
       } catch (error: unknown) {
         console.log(error);
         if (process.env.NODE_ENV === 'development') {
@@ -91,7 +93,7 @@ export class MailService {
             HttpStatus.UNAUTHORIZED,
           );
         }
-        return responseError('reset pass can not find emal, error', 1);
+        return responseError('reset pass can not find email, error', 1);
       }
       return responseSuccess('send mail forget password successfuly', 0, []);
     } catch (error: unknown) {
@@ -109,7 +111,7 @@ export class MailService {
       if (isProduction) {
         url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
       } else {
-        url = `http://localhost:${process.env.PORT}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
+        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
       }
       const isDev = process.env.NODE_ENV !== 'production';
       if (isDev) {
