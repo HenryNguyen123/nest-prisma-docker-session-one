@@ -12,6 +12,7 @@ interface forgetType {
 }
 @Injectable()
 export class MailService {
+  [x: string]: any;
   constructor(
     private prismaService: PrismaService,
     private readonly mailerService: MailerService,

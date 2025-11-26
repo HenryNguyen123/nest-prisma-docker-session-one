@@ -8,15 +8,40 @@ import {
 } from '@nestjs/common';
 import { MailService } from 'src/mail/mail.service';
 import type { Response } from 'express';
-import { responseError } from 'src/utils/response.utils';
+import { responseError, responseSuccess } from 'src/utils/response.utils';
 import { IResponse } from 'src/types/response/res.types';
+import { MailerService } from '@nestjs-modules/mailer';
 interface forgetType {
   email: string;
 }
 @Controller('mail')
 export class MailController {
-  constructor(private readonly mailerService: MailService) {}
+  constructor(
+    private readonly mailService: MailService,
+    private readonly mailerService: MailerService,
+  ) {}
 
+  @Post('test-mail')
+  async testMail() {
+    try {
+      await this.mailerService.sendMail({
+        to: 'nhokkudo143@gmail.com',
+        subject: 'test send mail.',
+        template: './test/testSendMail',
+      });
+      return responseSuccess('test send mail successfuly', 0, []);
+    } catch (error: unknown) {
+      console.log('send mail error: ', error);
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'send mail error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      return responseError('Internal server error', -500);
+    }
+  }
+  //step: forgot password user
   @Post('forgot-password')
   async forgotPassword(
     @Body() body: forgetType,
@@ -26,7 +51,7 @@ export class MailController {
       //step1: clear cookie forgot password old
       response.clearCookie('FORGETPASS');
       //step2: response api
-      const data = await this.mailerService.sendMailForgotPassword(
+      const data = await this.mailService.sendMailForgotPassword(
         body,
         response,
       );
