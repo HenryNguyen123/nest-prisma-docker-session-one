@@ -18,6 +18,9 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'public'), {
     prefix: '/public/',
   });
+  console.log('REDIS_HOST:', process.env.REDIS_HOST);
+  console.log('REDIS_PORT:', process.env.REDIS_PORT);
+  console.log('REDIS_PASSWORD:', process.env.REDIS_PASSWORD);
   console.log('Production template dir:', join(__dirname, 'templates'));
   await app.listen(process.env.PORT ?? 4000);
 }
