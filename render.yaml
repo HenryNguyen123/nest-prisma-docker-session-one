@@ -1,0 +1,44 @@
+services:
+  # ============================
+  #  Redis service (production)
+  # ============================
+  - type: redis
+    name: redis-prod
+    region: singapore
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []   # cho phép services nội bộ truy cập
+
+  # ============================
+  # NestJS API service (production)
+  # ============================
+  - type: web
+    name: nest-api
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run start:prod"
+
+    # Inject env tự động từ Redis service
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: redis-prod
+          property: host
+
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: redis-prod
+          property: port
+
+      - key: REDIS_PASSWORD
+        fromService:
+          type: redis
+          name: redis-prod
+          property: password

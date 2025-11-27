@@ -12,6 +12,8 @@ import { MailController } from './mail/mail.controller';
 import { MailModule } from './mail/mail.module';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PrismaModule } from 'src/prisma.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { PrismaModule } from 'src/prisma.module';
     MulterModule.register({
       dest: join(process.cwd(), '..', 'public', 'images', 'avatar'),
     }),
-    //step2: setup mailer
+    //step3: setup mailer
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com', // host SMTP
@@ -53,6 +55,18 @@ import { PrismaModule } from 'src/prisma.module';
           strict: true,
         },
       },
+    }),
+    //step4: setup redis
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    CacheModule.registerAsync({
+      useFactory: () => ({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        store: redisStore,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+        password: process.env.REDIS_PASSWORD || undefined,
+        ttl: 60,
+      }),
     }),
     MailModule,
     PrismaModule,

@@ -1,5 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+// import { HttpException, HttpStatus} from '@nestjs/common';
 import { signJWT } from '../utils/jwt/jwt.utils';
 import { Response } from 'express';
 import { IResponse } from 'src/types/response/res.types';
