@@ -18,4 +18,20 @@ export class AppController {
       <p>Người dùng có thể gửi email tới <strong>nhokkudo143@gmail.com</strong> để xóa dữ liệu. Chúng tôi sẽ xử lý trong vòng 7 ngày.</p>
     `);
   }
+  //step
+  @Get('terms-of-service')
+  termsOfService(@Res() res: Response) {
+    res.status(200).send(`
+      <h1>Terms of Service</h1>
+      <p>These are the rules of using our app...</p>
+    `);
+  }
+  //step
+  @Get('privacy-policy')
+  privacyPolicy(@Res() res: Response) {
+    res.status(200).send(`
+      <h1>Privacy Policy</h1>
+      <p>Chúng tôi tôn trọng quyền riêng tư của người dùng. Dữ liệu sẽ chỉ được sử dụng cho mục đích cung cấp dịch vụ.</p>
+    `);
+  }
 }
