@@ -201,7 +201,13 @@ export class AuthController {
           HttpStatus.UNAUTHORIZED,
         );
       }
-      return responseError('Internal server error', -500);
+      const errorString = JSON.stringify(
+        error,
+        Object.getOwnPropertyNames(error),
+        2,
+      );
+
+      return responseError(errorString, -500);
     }
   }
 }
