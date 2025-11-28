@@ -4,9 +4,18 @@ import { AuthService } from './auth.service';
 import { PrismaService } from 'src/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from 'src/mail/mail.service';
+import { PassportModule } from '@nestjs/passport';
+import { GoogleStrategy } from 'src/auth/google/google.strategy';
 
 @Module({
+  imports: [PassportModule.register({ session: false })], //set passport by @nesjt/passport
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, JwtService, MailService],
+  providers: [
+    AuthService,
+    PrismaService, //database
+    JwtService, // jwt
+    MailService, // mailer
+    GoogleStrategy, //google
+  ],
 })
 export class AuthModule {}

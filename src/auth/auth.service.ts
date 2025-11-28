@@ -20,6 +20,12 @@ import { MailService } from 'src/mail/mail.service';
 //   EC: number;
 //   DT: any;
 // }
+interface ProfileType {
+  email: string;
+  firstName: string;
+  lastName: string;
+  picture: string;
+}
 @Injectable()
 export class AuthService {
   constructor(
@@ -27,6 +33,7 @@ export class AuthService {
     private jwtService: JwtService,
     private mailService: MailService,
   ) {}
+  //step1: register service
   async register(
     dataUser: RegisterDto,
     file?: Express.Multer.File,
@@ -78,6 +85,7 @@ export class AuthService {
       return responseError('Internal server error', -500);
     }
   }
+  //step2: login service
   async login(dataLogin: LoginDto, response: Response): Promise<IResponse> {
     try {
       // check user
@@ -156,6 +164,7 @@ export class AuthService {
       return responseError('Internal server error', -500);
     }
   }
+  //step3: logout service
   // eslint-disable-next-line @typescript-eslint/require-await
   async logout(
     body: LogoutBody,
@@ -183,6 +192,7 @@ export class AuthService {
       return responseError('Internal server error', 503);
     }
   }
+  //step4: reset token service
   async verifyResetToken(token: string) {
     try {
       const key = process.env.JWT_SECRET_KEY_FORGOT_PASSWORD ?? '';
@@ -199,6 +209,7 @@ export class AuthService {
       return responseError('Internal server error', -500);
     }
   }
+  //step5: reset password service
   async resetPassword(
     body: ResetPasswordType,
     response: Response,
@@ -291,6 +302,77 @@ export class AuthService {
     } catch (error: unknown) {
       console.log(error);
       return responseError('Internal server error', -500);
+    }
+  }
+  // step6: oauth 2.0 login by google
+  async validateGoogleUser(
+    profile: ProfileType,
+    response: Response,
+  ): Promise<IResponse> {
+    try {
+      let user = await this.prismaService.user.findUnique({
+        where: { email: profile.email },
+      });
+      if (!user) {
+        user = await this.prismaService.user.create({
+          data: {
+            email: profile.email,
+            userName: profile.email,
+            password: '',
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            avatar: profile.picture,
+          },
+        });
+      }
+      // generate access-token and refresh token
+      const payload = {
+        sub: user.id,
+        userName: user.userName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        age: user.age,
+      };
+      const keyJWT = process.env.JWT_SECRET_KEY;
+      const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
+      const accessToken = await this.jwtService.signAsync(payload, {
+        secret: keyJWT,
+        expiresIn: '1h',
+      });
+      const resetToken: string = await this.jwtService.signAsync(payload, {
+        secret: keyJWTReset,
+        expiresIn: '7d',
+      });
+      // setup cookie client
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decoded = await this.jwtService.verify(accessToken, {
+        secret: keyJWT,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decodedReset = await verifyJWT(resetToken, keyJWTReset);
+      // this.jwtService.verify(resetToken, {
+      //   secret: keyJWTReset,
+      // });
+      if (decoded && decodedReset) {
+        const isProduction = process.env.NODE_ENV === 'production';
+        response.cookie('JWT', accessToken, {
+          httpOnly: true,
+          maxAge: 3600 * 1000,
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
+          path: '/',
+        });
+        return responseSuccess('Login user successfully!', 0, {
+          access_token: accessToken,
+          reset_token: resetToken,
+          data: payload,
+        });
+      }
+      return responseError('Login user fail!', 1);
+    } catch (error: unknown) {
+      console.log(error);
+      return responseError('login user by google fail', -500);
     }
   }
 }

@@ -5,6 +5,7 @@ import { cors, corsDev } from './config/configCors';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as express from 'express';
 async function bootstrap() {
   // const app = await NestFactory.create(AppModule);
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -18,6 +19,11 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'public'), {
     prefix: '/public/',
   });
+  //fix favicon.ico
+  app.use(
+    '/favicon.ico',
+    express.static(join(__dirname, '..', 'public', 'favicon.ico')),
+  );
   console.log('REDIS_HOST:', process.env.REDIS_HOST);
   console.log('REDIS_PORT:', process.env.REDIS_PORT);
   console.log('REDIS_PASSWORD:', process.env.REDIS_PASSWORD);

@@ -11,6 +11,7 @@ import {
   Query,
   Get,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto, LoginDto } from 'src/auth/dtos/auth.dto';
@@ -19,6 +20,7 @@ import { responseError, responseSuccess } from 'src/utils/response.utils';
 import type { LogoutBody, ResetPasswordType } from '../auth/types/auth.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Express } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 interface IResponse {
   EM: string;
   EC: number;
@@ -27,6 +29,7 @@ interface IResponse {
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+  //step1: register user
   @Post('register')
   @UseInterceptors(FileInterceptor('avatar', { dest: 'tmp/' }))
   // @UseInterceptors(
@@ -74,6 +77,7 @@ export class AuthController {
       return responseError('Internal server error', -500);
     }
   }
+  //step2: login user
   @Post('login')
   async login(
     @Body() body: LoginDto,
@@ -105,6 +109,7 @@ export class AuthController {
       return responseError('Internal server error', -500);
     }
   }
+  //step3: logout user
   @Post('logout')
   async logout(
     @Body() body: LogoutBody,
@@ -125,6 +130,7 @@ export class AuthController {
       return responseError('Internal server error', -500);
     }
   }
+  //step4: reset token
   @Get('verify-reset-token')
   async verifyResetToken(@Query('token') token: string): Promise<IResponse> {
     try {
@@ -141,6 +147,7 @@ export class AuthController {
       return responseError('Internal server error', -500);
     }
   }
+  //step5: reset password user with email
   @Put('reset-password')
   async resetPassword(
     @Body() body: ResetPasswordType,
@@ -153,6 +160,37 @@ export class AuthController {
         body,
         response,
         request,
+      );
+      return data;
+    } catch (error: unknown) {
+      console.log('Logout error: ', error);
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'logout error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      return responseError('Internal server error', -500);
+    }
+  }
+  //step6: login user by OAUTH 2.0
+  // #### OAuth 2.0
+  // Login with GOOGLE by passport-google
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
+  // get data user in callback google.strategy.ts
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(
+    @Req() req,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<IResponse> {
+    try {
+      const data = await this.authService.validateGoogleUser(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+        req.user,
+        response,
       );
       return data;
     } catch (error: unknown) {
