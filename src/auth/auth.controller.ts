@@ -187,6 +187,8 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<IResponse> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      console.log('OAuth req.user:', req.user);
       const data = await this.authService.validateGoogleUser(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         req.user,
@@ -194,6 +196,14 @@ export class AuthController {
       );
       return data;
     } catch (error: unknown) {
+      let message = 'Internal server error';
+      if (error instanceof Error) {
+        console.error('OAuth callback error stack:', error.stack);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        message = error.message;
+      } else {
+        console.error('Unknown OAuth error:', error);
+      }
       console.log('Logout error: ', error);
       if (process.env.NODE_ENV === 'development') {
         throw new HttpException(
@@ -201,13 +211,7 @@ export class AuthController {
           HttpStatus.UNAUTHORIZED,
         );
       }
-      const errorString = JSON.stringify(
-        error,
-        Object.getOwnPropertyNames(error),
-        2,
-      );
-
-      return responseError(errorString, -500);
+      return responseError('Internal server error', -500);
     }
   }
 }
