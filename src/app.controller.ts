@@ -10,6 +10,7 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+  //step: link use in login app with facebook
   @Get('data-deletion')
   dataDeletion(@Res() res: Response) {
     res.status(200).send(`

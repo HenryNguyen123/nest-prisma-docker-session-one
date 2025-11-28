@@ -28,6 +28,7 @@ async function bootstrap() {
   console.log('REDIS_PORT:', process.env.REDIS_PORT);
   console.log('REDIS_PASSWORD:', process.env.REDIS_PASSWORD);
   console.log('Production template dir:', join(__dirname, 'templates'));
+  console.log('Facebook callback URL:', process.env.FACEBOOK_CALLBACK_URL);
   await app.listen(process.env.PORT ?? 4000);
 }
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
