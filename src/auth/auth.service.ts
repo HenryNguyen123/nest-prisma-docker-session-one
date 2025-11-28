@@ -305,20 +305,30 @@ export class AuthService {
     }
   }
   // step6: oauth 2.0 login by google
-  async validateGoogleUser(
+  async validateOauthLogin(
     profile: ProfileType,
     response: Response,
   ): Promise<IResponse> {
     try {
+      //step check mail in file strategy
+      let getMail: string | null = profile?.email ?? null; // check facebook not get mail
+      if (!getMail) {
+        getMail = `${profile.firstName}-${profile.lastName}@facebook-mail-client-oauth.com`;
+      }
+      //step check have user in database
       let user = await this.prismaService.user.findUnique({
-        where: { email: profile.email },
+        where: { email: getMail },
       });
       if (!user) {
+        const passClient: string =
+          process.env.PASSWORD_CLIENT_HASH_CODE ?? profile.firstName;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const hashPass: string = await hashPassword(passClient);
         user = await this.prismaService.user.create({
           data: {
-            email: profile.email,
-            userName: profile.email,
-            password: '',
+            email: getMail,
+            userName: getMail,
+            password: hashPass,
             firstName: profile.firstName,
             lastName: profile.lastName,
             avatar: profile.picture,
@@ -327,7 +337,6 @@ export class AuthService {
       }
       // generate access-token and refresh token
       const payload = {
-        sub: user.id,
         userName: user.userName,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -372,7 +381,7 @@ export class AuthService {
       return responseError('Login user fail!', 1);
     } catch (error: unknown) {
       console.log(error);
-      return responseError('login user by google fail', -500);
+      return responseError('login user fail', -500);
     }
   }
 }

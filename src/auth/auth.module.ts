@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { MailService } from 'src/mail/mail.service';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from 'src/auth/google/google.strategy';
+import { FacebookStrategy } from 'src/auth/facebook/facebook.strategy';
 
 @Module({
   imports: [PassportModule.register({ session: false })], //set passport by @nesjt/passport
@@ -16,6 +17,7 @@ import { GoogleStrategy } from 'src/auth/google/google.strategy';
     JwtService, // jwt
     MailService, // mailer
     GoogleStrategy, //google
+    FacebookStrategy, //facebook
   ],
 })
 export class AuthModule {}

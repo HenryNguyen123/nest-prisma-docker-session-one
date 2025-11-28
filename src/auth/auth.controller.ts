@@ -26,6 +26,12 @@ interface IResponse {
   EC: number;
   DT: any;
 }
+interface ProfileType {
+  email: string;
+  firstName: string;
+  lastName: string;
+  picture: string;
+}
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -187,9 +193,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<IResponse> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      console.log('OAuth req.user:', req.user);
-      const data = await this.authService.validateGoogleUser(
+      const data = await this.authService.validateOauthLogin(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         req.user,
         response,
@@ -205,6 +209,33 @@ export class AuthController {
         console.error('Unknown OAuth error:', error);
       }
       console.log('Logout error: ', error);
+      if (process.env.NODE_ENV === 'development') {
+        throw new HttpException(
+          { message: 'logout error' },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      return responseError('Internal server error', -500);
+    }
+  }
+  //step7: login
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuth() {}
+  //get data callback login by facebook
+  @Get('facebook/callback')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuthRedirect(
+    @Req() req,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<IResponse> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const profile: ProfileType = req.user;
+      const data = await this.authService.validateOauthLogin(profile, response);
+      return data;
+    } catch (error: unknown) {
+      console.log(error);
       if (process.env.NODE_ENV === 'development') {
         throw new HttpException(
           { message: 'logout error' },
