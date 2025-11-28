@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
 import { AppService } from './app.service';
+import type { Response } from 'express';
 
 @Controller()
 export class AppController {
@@ -8,5 +9,12 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+  @Get('data-deletion')
+  dataDeletion(@Res() res: Response) {
+    res.status(200).send(`
+      <h1>Data Deletion Instructions</h1>
+      <p>Người dùng có thể gửi email tới <strong>nhokkudo143@gmail.com</strong> để xóa dữ liệu. Chúng tôi sẽ xử lý trong vòng 7 ngày.</p>
+    `);
   }
 }
