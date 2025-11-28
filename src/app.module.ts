@@ -13,6 +13,9 @@ import { MailModule } from './mail/mail.module';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { PrismaModule } from 'src/prisma.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { RedisController } from './redis/redis.controller';
+import { RedisService } from './redis/redis.service';
+import { RedisModule } from './redis/redis.module';
 import * as redisStore from 'cache-manager-ioredis';
 
 @Module({
@@ -57,21 +60,18 @@ import * as redisStore from 'cache-manager-ioredis';
       },
     }),
     //step4: setup redis
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     CacheModule.registerAsync({
       useFactory: () => ({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         store: redisStore,
-        host: process.env.REDIS_HOST || 'localhost',
-        port: Number(process.env.REDIS_PORT) || 6379,
-        password: process.env.REDIS_PASSWORD || undefined,
+        url: process.env.REDIS_URL,
         ttl: 60,
       }),
     }),
     MailModule,
     PrismaModule,
+    RedisModule,
   ],
-  controllers: [AppController, MailController],
-  providers: [AppService, MailService],
+  controllers: [AppController, MailController, RedisController],
+  providers: [AppService, MailService, RedisService],
 })
 export class AppModule {}
