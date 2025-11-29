@@ -193,11 +193,14 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
-      await this.authService.validateOauthLogin(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-        req.user,
-        response,
-      );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const profile: ProfileType = req?.user;
+      if (!profile) {
+        response.redirect(
+          process.env.FRONTEND_URL + '/login' || 'http://localhost:3000',
+        );
+      }
+      await this.authService.validateOauthLogin(profile, response);
       response.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
     } catch (error: unknown) {
       let message = 'Internal server error';
@@ -232,6 +235,11 @@ export class AuthController {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const profile: ProfileType = req.user;
+      if (!profile) {
+        response.redirect(
+          process.env.FRONTEND_URL + '/login' || 'http://localhost:3000',
+        );
+      }
       await this.authService.validateOauthLogin(profile, response);
       response.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
     } catch (error: unknown) {
