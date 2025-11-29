@@ -191,14 +191,14 @@ export class AuthController {
   async googleAuthRedirect(
     @Req() req,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<IResponse> {
+  ) {
     try {
-      const data = await this.authService.validateOauthLogin(
+      await this.authService.validateOauthLogin(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         req.user,
         response,
       );
-      return data;
+      response.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
     } catch (error: unknown) {
       let message = 'Internal server error';
       if (error instanceof Error) {
@@ -228,12 +228,12 @@ export class AuthController {
   async facebookAuthRedirect(
     @Req() req,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<IResponse> {
+  ) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const profile: ProfileType = req.user;
-      const data = await this.authService.validateOauthLogin(profile, response);
-      return data;
+      await this.authService.validateOauthLogin(profile, response);
+      response.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
     } catch (error: unknown) {
       console.log(error);
       if (process.env.NODE_ENV === 'development') {
