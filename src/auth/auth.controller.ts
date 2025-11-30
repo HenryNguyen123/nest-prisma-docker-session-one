@@ -253,7 +253,10 @@ export class AuthController {
       response.redirect(
         process.env.FRONTEND_URL + '/login' || 'http://localhost:3000',
       );
-      return responseError('Internal server error', -500);
+      return response.redirect(
+        `${process.env.FRONTEND_URL}/login?error=unauthorized`,
+      );
+      // return responseError('Internal server error', -500);
     }
   }
 }
