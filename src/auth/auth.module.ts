@@ -7,9 +7,14 @@ import { MailService } from 'src/mail/mail.service';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from 'src/auth/google/google.strategy';
 import { FacebookStrategy } from 'src/auth/facebook/facebook.strategy';
+import { RateLimitedLoginService } from 'src/rate-limited/rate-limited-login.service';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
-  imports: [PassportModule.register({ session: false })], //set passport by @nesjt/passport
+  imports: [
+    PassportModule.register({ session: false }),
+    CacheModule.register(),
+  ], //set passport by @nesjt/passport
   controllers: [AuthController],
   providers: [
     AuthService,
@@ -18,6 +23,7 @@ import { FacebookStrategy } from 'src/auth/facebook/facebook.strategy';
     MailService, // mailer
     GoogleStrategy, //google
     FacebookStrategy, //facebook
+    RateLimitedLoginService,
   ],
 })
 export class AuthModule {}

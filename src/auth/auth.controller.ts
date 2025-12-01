@@ -87,10 +87,11 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() body: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<IResponse> {
     try {
-      const data = await this.authService.login(body, response);
+      const data = await this.authService.login(body, response, req);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (data && data.DT?.access_token) {
         const isProduction = process.env.NODE_ENV === 'production';

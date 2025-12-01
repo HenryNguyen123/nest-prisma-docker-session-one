@@ -16,6 +16,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { RedisController } from './redis/redis.controller';
 import { RedisService } from './redis/redis.service';
 import { RedisModule } from './redis/redis.module';
+import { RateLimitedModule } from './rate-limited/rate-limited.module';
 import * as redisStore from 'cache-manager-ioredis';
 
 @Module({
@@ -64,12 +65,13 @@ import * as redisStore from 'cache-manager-ioredis';
       useFactory: () => ({
         store: redisStore,
         url: process.env.REDIS_URL,
-        ttl: 60,
+        // ttl: 60,
       }),
     }),
     MailModule,
     PrismaModule,
     RedisModule,
+    RateLimitedModule,
   ],
   controllers: [AppController, MailController, RedisController],
   providers: [AppService, MailService, RedisService],

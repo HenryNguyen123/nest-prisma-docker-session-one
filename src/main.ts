@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import 'dotenv/config';
-import { cors, corsDev } from './config/configCors';
+import { cors, corsDev } from './config/cors.config';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -24,11 +24,6 @@ async function bootstrap() {
     '/favicon.ico',
     express.static(join(__dirname, '..', 'public', 'favicon.ico')),
   );
-  console.log('REDIS_HOST:', process.env.REDIS_HOST);
-  console.log('REDIS_PORT:', process.env.REDIS_PORT);
-  console.log('REDIS_PASSWORD:', process.env.REDIS_PASSWORD);
-  console.log('Production template dir:', join(__dirname, 'templates'));
-  console.log('Facebook callback URL:', process.env.FACEBOOK_CALLBACK_URL);
   await app.listen(process.env.PORT ?? 4000);
 }
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

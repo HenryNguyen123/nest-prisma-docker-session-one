@@ -14,12 +14,8 @@ import { multerImage } from '../utils/auth/multerFile.utils';
 import type { IResponse } from '../types/response/res.types';
 import { verifyJWT } from '../utils/jwt/jwt.utils';
 import { MailService } from 'src/mail/mail.service';
+import { RateLimitedLoginService } from 'src/rate-limited/rate-limited-login.service';
 
-// interface IResponse {
-//   EM: string;
-//   EC: number;
-//   DT: any;
-// }
 interface ProfileType {
   email: string;
   firstName: string;
@@ -32,6 +28,7 @@ export class AuthService {
     private prismaService: PrismaService,
     private jwtService: JwtService,
     private mailService: MailService,
+    private rateLimitedLoginService: RateLimitedLoginService,
   ) {}
   //step1: register service
   async register(
@@ -86,8 +83,15 @@ export class AuthService {
     }
   }
   //step2: login service
-  async login(dataLogin: LoginDto, response: Response): Promise<IResponse> {
+  async login(
+    dataLogin: LoginDto,
+    response: Response,
+    req: Request,
+  ): Promise<IResponse> {
     try {
+      //step: check rate limit login
+      const ip = req.ip;
+      const key = `login-rate-limited:${ip}`;
       // check user
       const user = await this.prismaService.user.findUnique({
         where: { userName: dataLogin.userName },
@@ -107,13 +111,34 @@ export class AuthService {
         user.password,
       );
       if (!verify) {
-        // if (process.env.NODE_ENV === 'development') {
-        //   throw new HttpException(
-        //     { message: 'verify password error' },
-        //     HttpStatus.UNAUTHORIZED,
-        //   );
-        // }
+        //step: password fail set inrc rate limited login
+        try {
+          const count: number | null =
+            await this.rateLimitedLoginService.incr(key);
+          console.log('check count login: ', count);
+          if (count && count >= 5) {
+            return responseError(
+              'Login failed: max 5 attempts. Please wait 60 seconds.',
+              1,
+            );
+          }
+        } catch (error) {
+          console.log(error);
+        }
         return responseError('Please, check password or userName, fails', 1);
+      }
+      //step: check login failed: max 5 attemts
+      try {
+        const checkCountLogin = await this.rateLimitedLoginService.get(key);
+        if (checkCountLogin && Number(checkCountLogin) >= 5) {
+          return responseError(
+            'Login failed: max 5 attempts. Please wait 60 seconds.',
+            1,
+          );
+        }
+        await this.rateLimitedLoginService.del(key);
+      } catch (error) {
+        console.log(error);
       }
       // generate access-token and refresh token
       const payload = {
@@ -144,6 +169,8 @@ export class AuthService {
       //   secret: keyJWTReset,
       // });
       if (decoded && decodedReset) {
+        //step: delete redis if login success
+        await this.rateLimitedLoginService.del(key);
         const isProduction = process.env.NODE_ENV === 'production';
         response.cookie('JWT', accessToken, {
           httpOnly: true,
