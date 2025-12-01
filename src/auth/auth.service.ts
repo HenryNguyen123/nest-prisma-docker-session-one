@@ -92,6 +92,19 @@ export class AuthService {
       //step: check rate limit login
       const ip = req.ip;
       const key = `login-rate-limited:${ip}`;
+      //step: check login failed: max 5 attemts
+      try {
+        const checkCountLogin = await this.rateLimitedLoginService.get(key);
+        if (checkCountLogin && Number(checkCountLogin) >= 5) {
+          return responseError(
+            'Login failed: max 5 attempts. Please wait 60 seconds.',
+            1,
+          );
+        }
+        await this.rateLimitedLoginService.del(key);
+      } catch (error) {
+        console.log(error);
+      }
       // check user
       const user = await this.prismaService.user.findUnique({
         where: { userName: dataLogin.userName },
@@ -126,19 +139,6 @@ export class AuthService {
           console.log(error);
         }
         return responseError('Please, check password or userName, fails', 1);
-      }
-      //step: check login failed: max 5 attemts
-      try {
-        const checkCountLogin = await this.rateLimitedLoginService.get(key);
-        if (checkCountLogin && Number(checkCountLogin) >= 5) {
-          return responseError(
-            'Login failed: max 5 attempts. Please wait 60 seconds.',
-            1,
-          );
-        }
-        await this.rateLimitedLoginService.del(key);
-      } catch (error) {
-        console.log(error);
       }
       // generate access-token and refresh token
       const payload = {
