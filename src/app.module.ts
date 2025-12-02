@@ -34,23 +34,23 @@ import * as redisStore from 'cache-manager-ioredis';
     //step3: setup mailer
     MailerModule.forRoot({
       transport: {
-        // host: 'smtp.gmail.com', // host SMTP
-        host: 'smtp-relay.brevo.com', // host SMTP
+        host: 'smtp.gmail.com', // host SMTP
+        // host: 'smtp-relay.brevo.com', // host SMTP
         port: 587, // port SSL
         secure: false,
         auth: {
-          // user: process.env.EMAIL_USER,
-          // pass: process.env.EMAIL_PASS,
-          user: process.env.BREVO_LOGIN,
-          pass: process.env.BREVO_SMTP_KEY,
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+          // user: process.env.BREVO_LOGIN,
+          // pass: process.env.BREVO_SMTP_KEY,
         },
         tls: {
           rejectUnauthorized: false,
         },
       },
       defaults: {
-        // from: '"No Reply" <no-reply@example.com>',
-        from: `"No Reply" <${process.env.BREVO_LOGIN}>`,
+        from: '"No Reply" <no-reply@example.com>',
+        // from: `"No Reply" <${process.env.BREVO_LOGIN}>`,
       },
       template: {
         dir: join(process.cwd(), 'dist', 'templates'), // folder chứa file email template
