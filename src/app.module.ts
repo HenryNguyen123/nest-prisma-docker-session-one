@@ -34,8 +34,8 @@ import * as redisStore from 'cache-manager-ioredis';
     //step3: setup mailer
     MailerModule.forRoot({
       transport: {
-        host: 'smtp.gmail.com', // host SMTP
-        // host: 'smtp-relay.brevo.com', // host SMTP
+        // host: 'smtp.gmail.com', // host SMTP
+        host: 'smtp-relay.brevo.com', // host SMTP
         port: 587, // port SSL
         secure: false,
         auth: {

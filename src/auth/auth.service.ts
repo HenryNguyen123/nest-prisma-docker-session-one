@@ -171,7 +171,7 @@ export class AuthService {
       // this.jwtService.verify(resetToken, {
       //   secret: keyJWTReset,
       // });
-      if (decoded && decodedReset) {
+      if (decoded || decodedReset) {
         //step: delete redis if login success
         await this.rateLimitedLoginService.del(key);
         const isProduction = process.env.NODE_ENV === 'production';
