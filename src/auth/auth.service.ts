@@ -89,6 +89,7 @@ export class AuthService {
     req: Request,
   ): Promise<IResponse> {
     try {
+      console.log(dataLogin);
       //step: check rate limit login
       const ip = req.ip;
       const key = `login-rate-limited:${ip}`;
@@ -141,6 +142,8 @@ export class AuthService {
         return responseError('Please, check password or userName, fails', 1);
       }
       // generate access-token and refresh token
+      const timeExpire = dataLogin.rememberUser ? '1h' : '1m';
+      const RetimeExpire = dataLogin.rememberUser ? '7d' : '1m';
       const payload = {
         userName: user.userName,
         firstName: user.firstName,
@@ -152,11 +155,11 @@ export class AuthService {
       const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
       const accessToken = await this.jwtService.signAsync(payload, {
         secret: keyJWT,
-        expiresIn: '1h',
+        expiresIn: timeExpire,
       });
       const resetToken: string = await this.jwtService.signAsync(payload, {
         secret: keyJWTReset,
-        expiresIn: '7d',
+        expiresIn: RetimeExpire,
       });
       // setup cookie client
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

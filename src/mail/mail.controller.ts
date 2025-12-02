@@ -24,14 +24,11 @@ export class MailController {
   @Post('test-mail')
   async testMail() {
     try {
-      const isDev = process.env.NODE_ENV !== 'production';
-      if (isDev) {
-        await this.mailerService.sendMail({
-          to: 'nhokkudo143@gmail.com',
-          subject: 'test send mail.',
-          template: './test/testSendMail',
-        });
-      }
+      await this.mailerService.sendMail({
+        to: 'nhokkudo143@gmail.com',
+        subject: 'test send mail.',
+        template: './test/testSendMail',
+      });
       return responseSuccess('test send mail successfuly', 0, []);
     } catch (error: unknown) {
       console.log('send mail error: ', error);

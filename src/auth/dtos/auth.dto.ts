@@ -64,6 +64,8 @@ export class LoginDto {
   @MinLength(6)
   @MaxLength(20)
   password: string;
+
+  rememberUser: boolean;
 }
 
 export class ForgetDto {
