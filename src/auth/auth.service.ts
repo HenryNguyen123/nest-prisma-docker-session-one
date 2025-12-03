@@ -22,6 +22,13 @@ interface ProfileType {
   lastName: string;
   picture: string;
 }
+interface ResponseLoginType {
+  userName: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+  age: number;
+}
 @Injectable()
 export class AuthService {
   constructor(
@@ -30,6 +37,38 @@ export class AuthService {
     private mailService: MailService,
     private rateLimitedLoginService: RateLimitedLoginService,
   ) {}
+  //step0: recall me
+  async me(req: Request) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const token: string = req.cookies?.AUTH;
+      if (!token) {
+        return responseError('Dont find user, get user fail', -1);
+      }
+      const keyAccess = process.env.JWT_SECRET_KEY ?? '';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decodeAccess = await verifyJWT(token, keyAccess);
+      if (decodeAccess) {
+        const payload: ResponseLoginType = {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          userName: decodeAccess.userName,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          firstName: decodeAccess.firstName,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          lastName: decodeAccess.lastName,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          avatar: decodeAccess.avatar,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          age: decodeAccess.age,
+        };
+        return responseSuccess('get me, successfuly!', 0, payload);
+      }
+      return responseError('get accout user fail', 1);
+    } catch (error: unknown) {
+      console.log(error);
+      return responseError('Internal server error', -500);
+    }
+  }
   //step1: register service
   async register(
     dataUser: RegisterDto,
@@ -172,10 +211,11 @@ export class AuthService {
       //   secret: keyJWTReset,
       // });
       if (decoded || decodedReset) {
+        const authValue = dataLogin.rememberUser ? resetToken : accessToken;
         //step: delete redis if login success
         await this.rateLimitedLoginService.del(key);
         const isProduction = process.env.NODE_ENV === 'production';
-        response.cookie('JWT', accessToken, {
+        response.cookie('AUTH', authValue, {
           httpOnly: true,
           maxAge: 3600 * 1000,
           secure: isProduction,
@@ -203,19 +243,17 @@ export class AuthService {
   ): Promise<IResponse> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const token = req.cookies?.JWT;
-
+      const token = req.cookies?.AUTH;
       if (!token) {
         return responseError('JWT không tìm thấy', -1);
       }
       const data = { path: body.path };
-      res.clearCookie('JWT', {
+      res.clearCookie('AUTH', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
       });
-      console.log('path name: ', data);
       return responseSuccess('Logout successfuly!', 0, data);
     } catch (error: unknown) {
       console.log(error);
@@ -323,7 +361,7 @@ export class AuthService {
       });
       //step4: clear cookie forgot password and login
       response.clearCookie('FORGETPASS');
-      response.clearCookie('JWT');
+      response.clearCookie('AUTH');
       //step5: send mail change password success
       if (data) {
         await this.mailService.sendMailConfirmForgotPassword(email);
@@ -395,7 +433,7 @@ export class AuthService {
       // });
       if (decoded && decodedReset) {
         const isProduction = process.env.NODE_ENV === 'production';
-        response.cookie('JWT', accessToken, {
+        response.cookie('AUTH', accessToken, {
           httpOnly: true,
           maxAge: 3600 * 1000,
           secure: isProduction,

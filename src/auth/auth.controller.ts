@@ -35,6 +35,17 @@ interface ProfileType {
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+  //step0: call me
+  @Get('me')
+  async me(@Req() req: Request): Promise<IResponse> {
+    try {
+      const data = await this.authService.me(req);
+      return data;
+    } catch (error: unknown) {
+      console.log('recall me, getjwt authentication: ', error);
+      return responseError('Internal server error', -500);
+    }
+  }
   //step1: register user
   @Post('register')
   @UseInterceptors(FileInterceptor('avatar', { dest: 'tmp/' }))
@@ -69,7 +80,6 @@ export class AuthController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<IResponse> {
     try {
-      console.log('file controler: ', file);
       const data = await this.authService.register(body, file);
       return data;
     } catch (error) {
@@ -96,7 +106,7 @@ export class AuthController {
       if (data && data.DT?.access_token) {
         const isProduction = process.env.NODE_ENV === 'production';
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        response.cookie('JWT', data.DT.access_token, {
+        response.cookie('AUTH', data.DT.access_token, {
           httpOnly: true,
           maxAge: 3600 * 1000,
           secure: isProduction,
@@ -202,7 +212,8 @@ export class AuthController {
         );
       }
       await this.authService.validateOauthLogin(profile, response);
-      response.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+      const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
+      response.redirect(path || 'http://localhost:3000');
     } catch (error: unknown) {
       let message = 'Internal server error';
       if (error instanceof Error) {
@@ -242,7 +253,8 @@ export class AuthController {
         );
       }
       await this.authService.validateOauthLogin(profile, response);
-      response.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+      const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
+      response.redirect(path || 'http://localhost:3000');
     } catch (error: unknown) {
       console.log(error);
       if (process.env.NODE_ENV === 'development') {
@@ -257,7 +269,6 @@ export class AuthController {
       return response.redirect(
         `${process.env.FRONTEND_URL}/login?error=unauthorized`,
       );
-      // return responseError('Internal server error', -500);
     }
   }
 }
