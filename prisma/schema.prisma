@@ -19,7 +19,8 @@ model User {
   avatar    String?
   age       Int?
   dob       DateTime?
-  role      Role      @default(USER)
+  roleId    Int       @unique
+  role      Role?     @relation(fields: [roleId], references: [id])
   posts     Post[]
   profile   Profile?
 }
@@ -35,11 +36,14 @@ model Post {
   id       Int     @id @default(autoincrement())
   title    String
   content  String?
-  authorId Int
+  authorId Int     @unique 
   author   User    @relation(fields: [authorId], references: [id])
 }
 
-enum Role {
-  USER
-  ADMIN
+model Role {
+  id          Int    @id @default(autoincrement())
+  code        String @unique
+  name        String
+  description String
+  user        User[]
 }

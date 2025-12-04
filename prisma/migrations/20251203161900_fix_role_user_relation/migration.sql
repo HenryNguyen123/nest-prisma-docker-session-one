@@ -1,6 +1,3 @@
--- CreateEnum
-CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
-
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -13,7 +10,7 @@ CREATE TABLE "User" (
     "avatar" TEXT,
     "age" INTEGER,
     "dob" TIMESTAMP(3),
-    "role" "Role" NOT NULL DEFAULT 'USER',
+    "roleId" INTEGER NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -37,6 +34,16 @@ CREATE TABLE "Post" (
     CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Role" (
+    "id" SERIAL NOT NULL,
+    "code" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+
+    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -45,6 +52,12 @@ CREATE UNIQUE INDEX "User_userName_key" ON "User"("userName");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Role_code_key" ON "Role"("code");
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

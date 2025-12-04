@@ -9,7 +9,7 @@ export interface RegisterType {
   avatar?: string | null;
   age?: number | null;
   dob?: Date | null;
-  role: string;
+  roleId?: number;
 }
 
 export interface LoginType {

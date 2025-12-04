@@ -26,8 +26,10 @@ interface ResponseLoginType {
   userName: string;
   firstName: string;
   lastName: string;
-  avatar: string;
-  age: number;
+  avatar?: string | null;
+  age?: number | null;
+  roleId?: number;
+  roleCode?: string;
 }
 @Injectable()
 export class AuthService {
@@ -112,7 +114,7 @@ export class AuthService {
           avatar: avatarUrl,
           age: dataUser.age ? parseInt(dataUser.age.toString()) : null,
           dob: dataUser.dob ? new Date(dataUser.dob) : undefined,
-          role: 'USER',
+          roleId: 1,
         },
       });
       return responseSuccess('created user successfully!', 0, res);
@@ -148,6 +150,7 @@ export class AuthService {
       // check user
       const user = await this.prismaService.user.findUnique({
         where: { userName: dataLogin.userName },
+        include: { role: true },
       });
       if (!user) {
         // if (process.env.NODE_ENV === 'development') {
@@ -183,12 +186,14 @@ export class AuthService {
       // generate access-token and refresh token
       const timeExpire = dataLogin.rememberUser ? '1h' : '1m';
       const RetimeExpire = dataLogin.rememberUser ? '7d' : '1m';
-      const payload = {
+      const payload: ResponseLoginType = {
         userName: user.userName,
         firstName: user.firstName,
         lastName: user.lastName,
         avatar: user.avatar,
         age: user.age,
+        roleId: user.role?.id,
+        roleCode: user.role?.code,
       };
       const keyJWT = process.env.JWT_SECRET_KEY;
       const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
