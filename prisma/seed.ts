@@ -4,7 +4,6 @@ import { hashPassword } from '../src/utils/auth/password.utils';
 const prisma = new PrismaClient();
 
 async function main() {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   const superAdminRole = await prisma.role.upsert({
     where: { code: 'SUPERADMIN' },
     update: {},
@@ -16,7 +15,6 @@ async function main() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   const adminRole = await prisma.role.upsert({
     where: { code: 'ADMIN' },
     update: {},
@@ -28,7 +26,6 @@ async function main() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   const userRole = await prisma.role.upsert({
     where: { code: 'USER' },
     update: {},
@@ -53,7 +50,6 @@ async function main() {
       password,
       firstName: 'Super',
       lastName: 'Admin',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       role: { connect: { id: superAdminRole.id } },
     },
   });
@@ -69,7 +65,6 @@ async function main() {
       password,
       firstName: 'Admin',
       lastName: 'System',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       role: { connect: { id: adminRole.id } },
     },
   });
@@ -85,7 +80,6 @@ async function main() {
       password,
       firstName: 'Normal',
       lastName: 'User',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       role: { connect: { id: userRole.id } },
     },
   });

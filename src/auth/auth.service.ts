@@ -102,6 +102,7 @@ export class AuthService {
         avatarUrl = multerImg;
       }
       // step4: create user
+      const roleId: number = 3;
       const res: RegisterType = await this.prismaService.user.create({
         data: {
           email: dataUser.email,
@@ -114,7 +115,7 @@ export class AuthService {
           avatar: avatarUrl,
           age: dataUser.age ? parseInt(dataUser.age.toString()) : null,
           dob: dataUser.dob ? new Date(dataUser.dob) : undefined,
-          roleId: 1,
+          roleId: roleId,
         },
       });
       return responseSuccess('created user successfully!', 0, res);
