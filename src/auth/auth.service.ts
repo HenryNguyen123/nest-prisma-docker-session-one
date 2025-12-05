@@ -185,7 +185,7 @@ export class AuthService {
         return responseError('Please, check password or userName, fails', 1);
       }
       // generate access-token and refresh token
-      const timeExpire = dataLogin.rememberUser ? '1h' : '1m';
+      const timeExpire = dataLogin.rememberUser ? '7d' : '1m';
       const RetimeExpire = dataLogin.rememberUser ? '7d' : '1m';
       const payload: ResponseLoginType = {
         userName: user.userName,
