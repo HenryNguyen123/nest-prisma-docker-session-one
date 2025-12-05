@@ -6,5 +6,7 @@
     "removeComments": true,
     "sourceMap": true
   },
-  "exclude": ["node_modules", "test", "**/*.spec.ts"]
+  "include": ["src/**/*"],   // chỉ include src
+  "exclude": ["prisma/**/*"] 
+  // "exclude": ["node_modules", "test", "**/*.spec.ts"]
 }
