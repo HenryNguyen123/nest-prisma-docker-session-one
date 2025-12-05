@@ -26,7 +26,7 @@ export class MailController {
     try {
       await this.mailerService.sendMail({
         to: 'nhokkudo143@gmail.com',
-        subject: 'test send mail.',
+        subject: 'test send gmail.',
         template: './test/testSendMail',
       });
       return responseSuccess('test send mail successfuly', 0, []);
