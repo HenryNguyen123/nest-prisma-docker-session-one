@@ -30,7 +30,7 @@ export class MailController {
 
       const msg = {
         to: 'nhokkudo143@gmail.com',
-        from: 'nhokkudo143@gmail.com', // bắt buộc
+        from: 'nhokkudo143@gmail.com',
         subject: 'test send gmail',
         html: `<h1>Hello Minh Nhật</h1><p>SendGrid chạy OK</p>`,
       };
