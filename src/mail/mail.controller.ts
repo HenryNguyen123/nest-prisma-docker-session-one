@@ -11,6 +11,7 @@ import type { Response } from 'express';
 import { responseError, responseSuccess } from 'src/utils/response.utils';
 import { IResponse } from 'src/types/response/res.types';
 import { MailerService } from '@nestjs-modules/mailer';
+import sgMail from '@sendgrid/mail';
 interface forgetType {
   email: string;
 }
@@ -24,11 +25,22 @@ export class MailController {
   @Post('test-mail')
   async testMail() {
     try {
-      await this.mailerService.sendMail({
+      const key: string = process.env.SENDGRID_API_KEY ?? '';
+      sgMail.setApiKey(key);
+
+      const msg = {
         to: 'nhokkudo143@gmail.com',
-        subject: 'test send gmail.',
-        template: './test/testSendMail',
-      });
+        from: 'nhokkudo143@gmail.com', // bắt buộc
+        subject: 'test send gmail',
+        html: `<h1>Hello Minh Nhật</h1><p>SendGrid chạy OK</p>`,
+      };
+      await sgMail.send(msg);
+
+      // await this.mailerService.sendMail({
+      //   to: 'nhokkudo143@gmail.com',
+      //   subject: 'test send gmail.',
+      //   template: './test/testSendMail',
+      // });
       return responseSuccess('test send mail successfuly', 0, []);
     } catch (error: unknown) {
       console.log('send mail error: ', error);

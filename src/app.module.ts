@@ -34,16 +34,18 @@ import * as redisStore from 'cache-manager-ioredis';
     //step3: setup mailer
     MailerModule.forRoot({
       transport: {
-        // host: 'smtp.sendgrid.net', // host SMTP
-        host: 'smtp.gmail.com', // host SMTP
+        host: 'smtp.sendgrid.net', // host SMTP
+        // host: 'smtp.gmail.com', // host SMTP
         // host: 'smtp-relay.brevo.com', // host SMTP
         port: 587, // port SSL
         secure: false,
         auth: {
+          user: process.env.SENDGRID_API_USER,
+          pass: process.env.SENDGRID_API_KEY,
           // user: process.env.SENDGRID_API_USER,
           // pass: process.env.SENDGRID_API_KEY,
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+          // user: process.env.EMAIL_USER,
+          // pass: process.env.EMAIL_PASS,
           // user: process.env.BREVO_LOGIN,
           // pass: process.env.BREVO_SMTP_KEY,
         },
@@ -52,8 +54,8 @@ import * as redisStore from 'cache-manager-ioredis';
         // },
       },
       defaults: {
-        // from: '"Minh Nhat" <nhokkudo143@gmail.com>',
-        from: '"No Reply" <no-reply@example.com>',
+        from: '"Minh Nhat" <nhokkudo143@gmail.com>',
+        // from: '"No Reply" <no-reply@example.com>',
         // from: `"No Reply" <${process.env.BREVO_LOGIN}>`,
       },
       template: {
