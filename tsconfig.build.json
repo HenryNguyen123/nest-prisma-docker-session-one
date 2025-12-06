@@ -2,11 +2,11 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    // "rootDir": "./src",
     "removeComments": true,
     "sourceMap": true
   },
   "include": ["src/**/*"],   // chỉ include src
-  "exclude": ["prisma/**/*"] 
+  "exclude": ["prisma/**/*", "node_modules", "test", "**/*.spec.ts"] 
   // "exclude": ["node_modules", "test", "**/*.spec.ts"]
 }

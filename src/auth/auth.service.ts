@@ -136,6 +136,7 @@ export class AuthService {
       const ip = req.ip;
       const key = `login-rate-limited:${ip}`;
       //step: check login failed: max 5 attemts
+      // await this.rateLimitedLoginService.incr(key);
       try {
         const checkCountLogin = await this.rateLimitedLoginService.get(key);
         if (checkCountLogin && Number(checkCountLogin) >= 5) {
@@ -144,7 +145,7 @@ export class AuthService {
             1,
           );
         }
-        await this.rateLimitedLoginService.del(key);
+        // await this.rateLimitedLoginService.del(key);
       } catch (error) {
         console.log(error);
       }

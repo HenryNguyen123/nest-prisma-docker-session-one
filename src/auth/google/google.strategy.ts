@@ -5,7 +5,6 @@ import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     super({
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -34,7 +33,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       //   provider: 'google',
       accessToken,
     };
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     done(null, user);
   }
 }
