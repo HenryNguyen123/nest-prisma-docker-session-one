@@ -33,7 +33,30 @@ export class MailController {
         to: 'nhokkudo143@gmail.com',
         from: mailForm,
         subject: 'test send gmail',
-        html: `<h1>Hello Minh Nhật</h1><p>SendGrid chạy OK</p>`,
+        html: `
+        <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Test Mail Dài</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.5; }
+              p { margin-bottom: 16px; }
+            </style>
+          </head>
+          <body>
+            <h1>Xin chào Nguyễn Hoàng Minh Nhật</h1>
+            <p>Đây là mail test dài, dùng để kiểm tra hiển thị.</p>
+
+            <!-- Lặp nhiều lần để tạo mail dài -->
+            <div>
+              ${Array(1000).fill('<p>Đây là dòng test dài, kiểm tra mail.</p>').join('')}
+            </div>
+
+            <p>Mail kết thúc. Cảm ơn!</p>
+          </body>
+        </html>
+        `,
       };
       await sgMail.send(msg);
 
