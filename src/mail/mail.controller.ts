@@ -11,7 +11,10 @@ import type { Response } from 'express';
 import { responseError, responseSuccess } from 'src/utils/response.utils';
 import { IResponse } from 'src/types/response/res.types';
 import { MailerService } from '@nestjs-modules/mailer';
-import sgMail from '@sendgrid/mail';
+import { testMail } from '../templates/sendGridMails/test/test.sendgrid';
+import { sendMail } from '../utils/mails/send.mails';
+import type { sendMailType } from '../utils/mails/send.mails';
+
 interface forgetType {
   email: string;
 }
@@ -25,44 +28,13 @@ export class MailController {
   @Post('test-mail')
   async testMail() {
     try {
-      const key: string = process.env.SENDGRID_API_KEY ?? '';
-      const mailForm: string = process.env.SENDGRID_MAIL_NOREPLY ?? '';
-      sgMail.setApiKey(key);
-
-      const msg = {
-        to: 'nhokkudo143@gmail.com',
-        from: mailForm,
-        subject: 'test send gmail',
-        html: `
-        <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <title>hello minh</title>
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.5; }
-              p { margin-bottom: 16px; }
-            </style>
-          </head>
-          <body>
-            <h2>mail send</h2>
-
-            <p>Dòng 1: Đây là email test nội dung dài vừa phải.</p>
-            <p>Dòng 2: Email được tạo thủ công để kiểm tra hiển thị trong Gmail.</p>
-            <p>Dòng 3: Mỗi dòng đều có ý nghĩa để .</p>
-            <p>Dòng 4: Đây chỉ là email thử nghiệm, không phải quảng cáo.</p>
-            <p>Dòng 5: Nội dung email phải có ngữ cảnh rõ ràng.</p>
-            <p>Dòng 6: Chúng tôi đang kiểm tra hệ thống gửi mail SendGrid.</p>
-            <p>Dòng 7: Đây là đoạn văn bản bổ sung với nội dung khác nhau.</p>
-            <p>Dòng 8: Các nội dung đa dạng giúp vượt qua bộ lọc spam của Gmail.</p>
-            <p>Dòng 9: Email test kết thúc tại đây.</p>
-            <p>Dòng 10: Cảm ơn đại ca đã kiểm tra!</p>
-          </body>
-        </html>
-        `,
+      const data: sendMailType = {
+        mail: 'nhokkudo143@gmail.com',
+        name: 'test send mail',
+        subject: 'test mail',
+        html: testMail(),
       };
-      await sgMail.send(msg);
-
+      await sendMail(data);
       // await this.mailerService.sendMail({
       //   to: 'nhokkudo143@gmail.com',
       //   subject: 'test send gmail.',
