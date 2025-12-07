@@ -10,6 +10,11 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+  //step: call bot in render
+  @Get('ping')
+  ping() {
+    return { status: 'alive' };
+  }
   //step: link use in login app with facebook
   @Get('data-deletion')
   dataDeletion(@Res() res: Response) {

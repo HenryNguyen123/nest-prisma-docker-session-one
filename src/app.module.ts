@@ -17,11 +17,15 @@ import { RedisController } from './redis/redis.controller';
 import { RedisService } from './redis/redis.service';
 import { RedisModule } from './redis/redis.module';
 import { RateLimitedModule } from './rate-limited/rate-limited.module';
+import { BotModule } from './bot/bot.module';
 import * as redisStore from 'cache-manager-ioredis';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     AuthModule,
+    //step0: run bot
+    ScheduleModule.forRoot(),
     // step1: base public
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '..', 'public'),
@@ -78,6 +82,7 @@ import * as redisStore from 'cache-manager-ioredis';
     PrismaModule,
     RedisModule,
     RateLimitedModule,
+    BotModule,
   ],
   controllers: [AppController, MailController, RedisController],
   providers: [AppService, MailService, RedisService],
