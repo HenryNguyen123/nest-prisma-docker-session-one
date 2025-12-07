@@ -4,8 +4,8 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class PingBotService {
-  private readonly logger = new Logger(PingBotService.name);
+export class BotService {
+  private readonly logger = new Logger(BotService.name);
   private readonly url = `${process.env.DOMAIN_SERVER}/ping`;
 
   constructor(private readonly httpService: HttpService) {}
