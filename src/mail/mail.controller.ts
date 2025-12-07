@@ -26,11 +26,12 @@ export class MailController {
   async testMail() {
     try {
       const key: string = process.env.SENDGRID_API_KEY ?? '';
+      const mailForm: string = process.env.SENDGRID_MAIL_NOREPLY ?? '';
       sgMail.setApiKey(key);
 
       const msg = {
         to: 'nhokkudo143@gmail.com',
-        from: 'nhokkudo143@gmail.com',
+        from: mailForm,
         subject: 'test send gmail',
         html: `<h1>Hello Minh Nhật</h1><p>SendGrid chạy OK</p>`,
       };
