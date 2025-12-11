@@ -208,10 +208,12 @@ export class AuthController {
       const profile: ProfileType = req?.user;
       if (!profile) {
         response.redirect(
-          process.env.FRONTEND_URL + '/login' || 'http://localhost:3000',
+          process.env.FRONTEND_URL + '/clients/auth/login' ||
+            'http://localhost:3000',
         );
       }
-      await this.authService.validateOauthLogin(profile, response);
+      const title: string = 'google';
+      await this.authService.validateOauthLogin(profile, response, title);
       const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
       response.redirect(path || 'http://localhost:3000');
     } catch (error: unknown) {
@@ -247,12 +249,15 @@ export class AuthController {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const profile: ProfileType = req.user;
+      console.log('profile facebook: ', profile);
       if (!profile) {
         response.redirect(
-          process.env.FRONTEND_URL + '/login' || 'http://localhost:3000',
+          process.env.FRONTEND_URL + '/clients/auth/login' ||
+            'http://localhost:3000',
         );
       }
-      await this.authService.validateOauthLogin(profile, response);
+      const title: string = 'facebook';
+      await this.authService.validateOauthLogin(profile, response, title);
       const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
       response.redirect(path || 'http://localhost:3000');
     } catch (error: unknown) {

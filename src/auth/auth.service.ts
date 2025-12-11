@@ -28,8 +28,9 @@ interface ResponseLoginType {
   lastName: string;
   avatar?: string | null;
   age?: number | null;
-  roleId?: number;
-  roleCode?: string;
+  roleId: number;
+  roleCode: string;
+  loginBy: string;
 }
 @Injectable()
 export class AuthService {
@@ -62,6 +63,12 @@ export class AuthService {
           avatar: decodeAccess.avatar,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
           age: decodeAccess.age,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          roleId: decodeAccess.roleId,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          roleCode: decodeAccess.roleCode,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          loginBy: decodeAccess.loginBy,
         };
         return responseSuccess('get me, successfuly!', 0, payload);
       }
@@ -194,8 +201,9 @@ export class AuthService {
         lastName: user.lastName,
         avatar: user.avatar,
         age: user.age,
-        roleId: user.role?.id,
-        roleCode: user.role?.code,
+        roleId: user.role?.id ?? 3,
+        roleCode: user.role?.code ?? '',
+        loginBy: '',
       };
       const keyJWT = process.env.JWT_SECRET_KEY;
       const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
@@ -383,18 +391,23 @@ export class AuthService {
   async validateOauthLogin(
     profile: ProfileType,
     response: Response,
+    title: string,
   ): Promise<IResponse> {
     try {
       //step check mail in file strategy
       let getMail: string | null = profile?.email ?? null; // check facebook not get mail
+      console.log('mail: ', getMail);
       if (!getMail) {
         getMail = `${profile.firstName}-${profile.lastName}@facebook-mail-client-oauth.com`;
+        console.log('check mail: ', getMail);
       }
       //step check have user in database
       let user = await this.prismaService.user.findUnique({
         where: { email: getMail },
+        include: { role: true },
       });
       if (!user) {
+        const roleId: number = 3;
         const passClient: string =
           process.env.PASSWORD_CLIENT_HASH_CODE ?? profile.firstName;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -407,17 +420,23 @@ export class AuthService {
             firstName: profile.firstName,
             lastName: profile.lastName,
             avatar: profile.picture,
+            roleId: roleId,
           },
+          include: { role: true },
         });
       }
       // generate access-token and refresh token
-      const payload = {
+      const payload: ResponseLoginType = {
         userName: user.userName,
         firstName: user.firstName,
         lastName: user.lastName,
         avatar: user.avatar,
         age: user.age,
+        roleId: user.roleId,
+        roleCode: user.role?.code ?? '',
+        loginBy: title,
       };
+      console.log('pay;oad: ', payload);
       const keyJWT = process.env.JWT_SECRET_KEY;
       const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
       const accessToken = await this.jwtService.signAsync(payload, {
