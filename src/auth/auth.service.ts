@@ -453,11 +453,11 @@ export class AuthService {
         secret: keyJWT,
       });
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const decodedReset = await verifyJWT(resetToken, keyJWTReset);
+      // const decodedReset = await verifyJWT(resetToken, keyJWTReset);
       // this.jwtService.verify(resetToken, {
       //   secret: keyJWTReset,
       // });
-      if (decoded && decodedReset) {
+      if (decoded) {
         const isProduction = process.env.NODE_ENV === 'production';
         response.cookie('AUTH', accessToken, {
           httpOnly: true,
