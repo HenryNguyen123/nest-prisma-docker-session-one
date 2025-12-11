@@ -466,6 +466,7 @@ export class AuthService {
           sameSite: isProduction ? 'none' : 'lax',
           path: '/',
         });
+        console.log('set jwt 0auth2 successfuly');
         return responseSuccess('Login user successfully!', 0, {
           access_token: accessToken,
           reset_token: resetToken,
