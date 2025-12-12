@@ -16,7 +16,6 @@ import { verifyJWT } from '../utils/jwt/jwt.utils';
 import { MailService } from 'src/mail/mail.service';
 import { RateLimitedLoginService } from 'src/rate-limited/rate-limited-login.service';
 import { RedisService } from 'src/redis/redis.service';
-import { decode } from 'punycode';
 
 interface ProfileType {
   email: string;
@@ -69,23 +68,23 @@ export class AuthService {
         const decoded = await this.jwtService.verify(accessToken, {
           secret: keyJWT,
         });
-        console.log('decode callback: ', decode);
-        if (decoded) {
-          const isProduction = process.env.NODE_ENV === 'production';
-          response.cookie('AUTH', accessToken, {
-            httpOnly: true,
-            maxAge: 3600 * 1000,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'lax',
-            path: '/',
-          });
-          return responseSuccess('Login user successfully!', 0, {
-            access_token: accessToken,
-            reset_token: resetToken,
-            data: dataRedis,
-          });
-        }
-        return responseError('Login user fail!', 1);
+        console.log('decode callback: ', decoded);
+        // if (decoded) {
+        const isProduction = process.env.NODE_ENV === 'production';
+        response.cookie('AUTH', accessToken, {
+          httpOnly: true,
+          maxAge: 3600 * 1000,
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
+          path: '/',
+        });
+        return responseSuccess('Login user successfully!', 0, {
+          access_token: accessToken,
+          reset_token: resetToken,
+          data: dataRedis,
+        });
+        // }
+        // return responseError('Login user fail!', 1);
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const token: string = req.cookies?.AUTH;
