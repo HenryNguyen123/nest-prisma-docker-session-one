@@ -15,6 +15,7 @@ import type { IResponse } from '../types/response/res.types';
 import { verifyJWT } from '../utils/jwt/jwt.utils';
 import { MailService } from 'src/mail/mail.service';
 import { RateLimitedLoginService } from 'src/rate-limited/rate-limited-login.service';
+import { RedisService } from 'src/redis/redis.service';
 
 interface ProfileType {
   email: string;
@@ -39,10 +40,50 @@ export class AuthService {
     private jwtService: JwtService,
     private mailService: MailService,
     private rateLimitedLoginService: RateLimitedLoginService,
+    private redisService: RedisService,
   ) {}
   //step0: recall me
-  async me(req: Request) {
+  async me(req: Request, response: Response) {
     try {
+      const keyRedis = `Oauth2-${req.ip}`;
+      console.log('auth me keyredis: ', keyRedis);
+      //step: check redis
+      const dataRedis = await this.redisService.get(keyRedis);
+      console.log('data auth me: ', dataRedis);
+      if (dataRedis) {
+        //step jwt and cookies
+        const keyJWT = process.env.JWT_SECRET_KEY;
+        const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
+        const accessToken = await this.jwtService.signAsync(dataRedis, {
+          secret: keyJWT,
+          expiresIn: '1h',
+        });
+        const resetToken: string = await this.jwtService.signAsync(dataRedis, {
+          secret: keyJWTReset,
+          expiresIn: '7d',
+        });
+        // setup cookie client
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const decoded = await this.jwtService.verify(accessToken, {
+          secret: keyJWT,
+        });
+        if (decoded) {
+          const isProduction = process.env.NODE_ENV === 'production';
+          response.cookie('AUTH', accessToken, {
+            httpOnly: true,
+            maxAge: 3600 * 1000,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            path: '/',
+          });
+          return responseSuccess('Login user successfully!', 0, {
+            access_token: accessToken,
+            reset_token: resetToken,
+            data: dataRedis,
+          });
+        }
+        return responseError('Login user fail!', 1);
+      }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const token: string = req.cookies?.AUTH;
       if (!token) {
@@ -162,12 +203,6 @@ export class AuthService {
         include: { role: true },
       });
       if (!user) {
-        // if (process.env.NODE_ENV === 'development') {
-        //   throw new HttpException(
-        //     { message: 'check user login error' },
-        //     HttpStatus.UNAUTHORIZED,
-        //   );
-        // }
         return responseError('Nothing find user, fail', 1);
       }
       //check pass
@@ -391,9 +426,12 @@ export class AuthService {
   async validateOauthLogin(
     profile: ProfileType,
     response: Response,
+    request: Request,
     title: string,
   ): Promise<IResponse> {
     try {
+      const ip = request.ip;
+      console.log('ip in oauth2: ', ip);
       //step check mail in file strategy
       let getMail: string | null = profile?.email ?? null; // check facebook not get mail
       console.log('mail: ', getMail);
@@ -436,7 +474,12 @@ export class AuthService {
         roleCode: user.role?.code ?? '',
         loginBy: title,
       };
-      console.log('pay;oad: ', payload);
+      //step: create redis oauth of frontend write by nextjs
+      const keyRedis = `Oauth2-${ip}`;
+      console.log('key oauth2: ', keyRedis);
+      console.log('payload oauth2: ', payload);
+      await this.redisService.set(keyRedis, payload, 60000);
+      //step jwt and cookies
       const keyJWT = process.env.JWT_SECRET_KEY;
       const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
       const accessToken = await this.jwtService.signAsync(payload, {
@@ -452,11 +495,6 @@ export class AuthService {
       const decoded = await this.jwtService.verify(accessToken, {
         secret: keyJWT,
       });
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      // const decodedReset = await verifyJWT(resetToken, keyJWTReset);
-      // this.jwtService.verify(resetToken, {
-      //   secret: keyJWTReset,
-      // });
       if (decoded) {
         const isProduction = process.env.NODE_ENV === 'production';
         response.cookie('AUTH', accessToken, {
@@ -466,7 +504,6 @@ export class AuthService {
           sameSite: isProduction ? 'none' : 'lax',
           path: '/',
         });
-        console.log('set jwt 0auth2 successfuly');
         return responseSuccess('Login user successfully!', 0, {
           access_token: accessToken,
           reset_token: resetToken,

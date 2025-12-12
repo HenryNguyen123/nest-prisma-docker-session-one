@@ -19,6 +19,15 @@ export class LoginRateLimitedRedisService {
       return null;
     }
   }
+  async set(key: string) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      return await this.client.set(key);
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
   async get(key: string) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access

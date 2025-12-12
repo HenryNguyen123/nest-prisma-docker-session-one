@@ -9,6 +9,7 @@ import { GoogleStrategy } from 'src/auth/google/google.strategy';
 import { FacebookStrategy } from 'src/auth/facebook/facebook.strategy';
 import { RateLimitedLoginService } from 'src/rate-limited/rate-limited-login.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import { RedisService } from 'src/redis/redis.service';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     GoogleStrategy, //google
     FacebookStrategy, //facebook
     RateLimitedLoginService,
+    RedisService,
   ],
 })
 export class AuthModule {}

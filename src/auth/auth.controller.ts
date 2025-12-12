@@ -37,9 +37,9 @@ export class AuthController {
   constructor(private authService: AuthService) {}
   //step0: call me
   @Get('me')
-  async me(@Req() req: Request): Promise<IResponse> {
+  async me(@Req() req: Request, @Res() response: Response): Promise<IResponse> {
     try {
-      const data = await this.authService.me(req);
+      const data = await this.authService.me(req, response);
       return data;
     } catch (error: unknown) {
       console.log('recall me, getjwt authentication: ', error);
@@ -201,6 +201,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(
     @Req() req,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
@@ -213,7 +214,12 @@ export class AuthController {
         );
       }
       const title: string = 'google';
-      await this.authService.validateOauthLogin(profile, response, title);
+      await this.authService.validateOauthLogin(
+        profile,
+        response,
+        request,
+        title,
+      );
       const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
       response.redirect(path || 'http://localhost:3000');
     } catch (error: unknown) {
@@ -244,6 +250,7 @@ export class AuthController {
   @UseGuards(AuthGuard('facebook'))
   async facebookAuthRedirect(
     @Req() req,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
@@ -257,7 +264,12 @@ export class AuthController {
         );
       }
       const title: string = 'facebook';
-      await this.authService.validateOauthLogin(profile, response, title);
+      await this.authService.validateOauthLogin(
+        profile,
+        response,
+        request,
+        title,
+      );
       const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
       response.redirect(path || 'http://localhost:3000');
     } catch (error: unknown) {
