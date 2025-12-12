@@ -16,6 +16,7 @@ import { verifyJWT } from '../utils/jwt/jwt.utils';
 import { MailService } from 'src/mail/mail.service';
 import { RateLimitedLoginService } from 'src/rate-limited/rate-limited-login.service';
 import { RedisService } from 'src/redis/redis.service';
+import { decode } from 'punycode';
 
 interface ProfileType {
   email: string;
@@ -49,15 +50,16 @@ export class AuthService {
       console.log('auth me keyredis: ', keyRedis);
       //step: check redis
       const dataRedis = await this.redisService.get(keyRedis);
-      console.log('data auth me: ', dataRedis);
       if (dataRedis) {
         //step jwt and cookies
+        console.log('data auth me: ', dataRedis);
         const keyJWT = process.env.JWT_SECRET_KEY;
         const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
         const accessToken = await this.jwtService.signAsync(dataRedis, {
           secret: keyJWT,
           expiresIn: '1h',
         });
+        console.log('accessToken: ', accessToken);
         const resetToken: string = await this.jwtService.signAsync(dataRedis, {
           secret: keyJWTReset,
           expiresIn: '7d',
@@ -67,6 +69,7 @@ export class AuthService {
         const decoded = await this.jwtService.verify(accessToken, {
           secret: keyJWT,
         });
+        console.log('decode callback: ', decode);
         if (decoded) {
           const isProduction = process.env.NODE_ENV === 'production';
           response.cookie('AUTH', accessToken, {
