@@ -14,6 +14,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { testMail } from '../templates/sendGridMails/test/test.sendgrid';
 import { sendMail } from '../utils/mails/send.mails';
 import type { sendMailType } from '../utils/mails/send.mails';
+import { RedisService } from 'src/redis/redis.service';
 
 interface forgetType {
   email: string;
@@ -23,6 +24,7 @@ export class MailController {
   constructor(
     private readonly mailService: MailService,
     private readonly mailerService: MailerService,
+    private redisService: RedisService,
   ) {}
 
   @Post('test-mail')

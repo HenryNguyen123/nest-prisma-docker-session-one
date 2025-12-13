@@ -332,33 +332,30 @@ export class AuthService {
     request: Request,
   ): Promise<IResponse> {
     try {
+      const keyParam: string = body.key;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const dataRedis: string = await this.redisService.get(keyParam);
+      if (!keyParam || dataRedis != keyParam) {
+        return responseError(
+          'The password reset link is invalid or has already been used.',
+          1,
+        );
+      }
       //step1: check verify jwt
       const key = process.env.JWT_SECRET_KEY_FORGOT_PASSWORD ?? '';
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const token: string = request.cookies['FORGETPASS'];
       if (!token) {
-        // if (process.env.NODE_ENV === 'development') {
-        //   throw new HttpException(
-        //     { message: 'Cant not find token, error' },
-        //     HttpStatus.UNAUTHORIZED,
-        //   );
-        // }
         return responseError(
-          'Password reset token has expired or is no longer valid.',
+          'Your password reset session has expired. Please request a new reset link.',
           1,
         );
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const decode = await verifyJWT(token, key);
       if (!decode) {
-        // if (process.env.NODE_ENV === 'development') {
-        //   throw new HttpException(
-        //     { message: 'reset pass can not find jwt, error' },
-        //     HttpStatus.UNAUTHORIZED,
-        //   );
-        // }
         return responseError(
-          'Password reset token has expired or is no longer valid.',
+          'We were unable to verify your account information. Please request a new password reset.',
           1,
         );
       }
@@ -367,14 +364,8 @@ export class AuthService {
       const rawEmail = decode?.email ?? decode?.payload?.email;
       const email = String(rawEmail).trim();
       if (!email) {
-        // if (process.env.NODE_ENV === 'development') {
-        //   throw new HttpException(
-        //     { message: 'reset pass can not find emal, error' },
-        //     HttpStatus.UNAUTHORIZED,
-        //   );
-        // }
         return responseError(
-          'Unable to retrieve email from the reset password token.',
+          'We were unable to verify your account information. Please request a new password reset.',
           1,
         );
       }
@@ -383,14 +374,8 @@ export class AuthService {
         where: { email: email },
       });
       if (!user) {
-        // if (process.env.NODE_ENV === 'development') {
-        //   throw new HttpException(
-        //     { message: 'reset pass can not find user, error' },
-        //     HttpStatus.UNAUTHORIZED,
-        //   );
-        // }
         return responseError(
-          'Your account information is incorrect or does not exist. Please check again.',
+          'No account was found with the provided email address.',
           1,
         );
       }
@@ -412,12 +397,20 @@ export class AuthService {
       response.clearCookie('AUTH');
       //step5: send mail change password success
       if (data) {
-        await this.mailService.sendMailConfirmForgotPassword(email);
+        // await this.mailService.sendMailConfirmForgotPassword(email);
       }
-      return responseSuccess('Password has been reset successfully!', 0, []);
+      await this.redisService.del(keyParam);
+      return responseSuccess(
+        'Your password has been reset successfully. You can now log in with your new password.',
+        0,
+        [],
+      );
     } catch (error: unknown) {
       console.log(error);
-      return responseError('Internal server error', -500);
+      return responseError(
+        'Something went wrong while resetting your password. Please try again later.',
+        1,
+      );
     }
   }
   // step6: oauth 2.0 login by google

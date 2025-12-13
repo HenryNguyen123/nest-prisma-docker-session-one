@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma.service';
 import { sendMail } from '../utils/mails/send.mails';
 import type { sendMailType } from '../utils/mails/send.mails';
 import { forgetPasswordHTML } from '../templates/sendGridMails/auth/forotPassword.sendgrid';
+import { RedisService } from 'src/redis/redis.service';
 
 interface forgetType {
   email: string;
@@ -20,6 +21,7 @@ export class MailService {
   constructor(
     private prismaService: PrismaService,
     private readonly mailerService: MailerService,
+    private redisService: RedisService,
   ) {}
 
   async sendMailForgotPassword(
@@ -27,6 +29,12 @@ export class MailService {
     res: Response,
   ): Promise<IResponse> {
     try {
+      const keyParam: string = crypto.randomUUID();
+      const keyClient: string = `mail-${keyParam}`;
+      //step: set redis
+      //set count
+      await this.redisService.incr(keyClient);
+      await this.redisService.set(keyClient, keyClient, 900000);
       const mailUser: string = body.email;
       //step: check user
       const user = await this.prismaService.user.findUnique({
@@ -55,9 +63,9 @@ export class MailService {
       //step3: setup service email
       let url: string = '';
       if (isProduction) {
-        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
+        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${keyClient}`;
       } else {
-        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}`;
+        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${keyClient}`;
       }
       if (process.env.NODE_ENV === 'development') {
         const props = {

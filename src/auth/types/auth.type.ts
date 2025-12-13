@@ -23,6 +23,7 @@ export interface LogoutBody {
 
 export interface ResetPasswordType {
   resetPassword: string;
+  key: string;
 }
 
 export interface MeType {
