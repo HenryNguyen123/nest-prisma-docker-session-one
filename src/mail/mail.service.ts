@@ -85,7 +85,8 @@ export class MailService {
           mail: mailUser,
           name: 'Reset Password',
           subject: 'Reset Password',
-          html: forgetPasswordHTML(props),
+          // html: forgetPasswordHTML(props),
+          html: 'xin chao toi la xin chao xin chaooooooooooooooooo cac ban cac ban co biet la toi xin chao',
         };
         console.log('data mail: ', dataMail);
         await sendMail(dataMail);
