@@ -33,7 +33,13 @@ export class MailService {
       const keyClient: string = `mail-${keyParam}`;
       //step: set redis
       //set count
-      await this.redisService.incr(keyClient);
+      const count = (await this.redisService.incr(keyClient)) ?? 0;
+      if (count !== 1) {
+        return responseError(
+          'Please check your email address and try again later.',
+          1,
+        );
+      }
       await this.redisService.set(keyClient, keyClient, 900000);
       const mailUser: string = body.email;
       //step: check user
