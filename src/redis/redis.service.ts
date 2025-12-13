@@ -30,7 +30,7 @@ export class RedisService {
       return null;
     }
   }
-  async get(key: string) {
+  async get(key: string): Promise<any> {
     try {
       return await this.cacheManager.get(key);
     } catch (error) {

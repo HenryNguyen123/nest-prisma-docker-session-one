@@ -39,4 +39,17 @@ export class AppController {
       <p>Chúng tôi tôn trọng quyền riêng tư của người dùng. Dữ liệu sẽ chỉ được sử dụng cho mục đích cung cấp dịch vụ.</p>
     `);
   }
+  //test cookies
+  @Get('test-cookie')
+  testCookies(@Res() res: Response) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('test_cookie', 'test_cookie', {
+      httpOnly: true,
+      maxAge: 3600 * 1000,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
+    });
+    console.log('test cockies');
+  }
 }

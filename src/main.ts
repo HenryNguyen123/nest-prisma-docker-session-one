@@ -24,7 +24,6 @@ async function bootstrap() {
     '/favicon.ico',
     express.static(join(__dirname, '..', 'public', 'favicon.ico')),
   );
-  app.set('trust proxy', 1);
   await app.listen(process.env.PORT ?? 4000);
 }
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

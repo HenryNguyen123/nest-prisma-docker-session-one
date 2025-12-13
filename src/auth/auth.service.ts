@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { RegisterDto, LoginDto } from './dtos/auth.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -7,6 +7,7 @@ import type {
   RegisterType,
   LogoutBody,
   ResetPasswordType,
+  MeType,
 } from '../auth/types/auth.type';
 import { Request, Response } from 'express';
 import { hashPassword, checkPassword } from '../utils/auth/password.utils';
@@ -43,49 +44,49 @@ export class AuthService {
     private redisService: RedisService,
   ) {}
   //step0: recall me
-  async me(req: Request, response: Response) {
+  async me(req: Request, response: Response, body: MeType): Promise<IResponse> {
     try {
-      const keyRedis = `Oauth2-${req.ip}`;
+      const sessionKey: string = body.key;
+      console.log('callback me sessionkey: ', sessionKey);
+      const keyRedis = `Oauth2-${sessionKey}`;
       console.log('auth me keyredis: ', keyRedis);
       //step: check redis
-      const dataRedis = await this.redisService.get(keyRedis);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const dataRedis: string = await this.redisService.get(keyRedis);
+      console.log('dataredis: ', dataRedis);
       if (dataRedis) {
         //step jwt and cookies
         console.log('data auth me: ', dataRedis);
         const keyJWT = process.env.JWT_SECRET_KEY;
-        const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
-        const accessToken = await this.jwtService.signAsync(dataRedis, {
-          secret: keyJWT,
-          expiresIn: '1h',
-        });
-        console.log('accessToken: ', accessToken);
-        const resetToken: string = await this.jwtService.signAsync(dataRedis, {
-          secret: keyJWTReset,
-          expiresIn: '7d',
-        });
         // setup cookie client
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const decoded = await this.jwtService.verify(accessToken, {
+        const decoded: object = await this.jwtService.verify(dataRedis, {
           secret: keyJWT,
         });
+        console.log('dataRedis callback: ', dataRedis);
         console.log('decode callback: ', decoded);
         // if (decoded) {
-        const isProduction = process.env.NODE_ENV === 'production';
-        response.cookie('AUTH', accessToken, {
-          httpOnly: true,
-          maxAge: 3600 * 1000,
-          secure: isProduction,
-          sameSite: isProduction ? 'none' : 'lax',
-          path: '/',
-        });
-        return responseSuccess('Login user successfully!', 0, {
-          access_token: accessToken,
-          reset_token: resetToken,
-          data: dataRedis,
-        });
+        try {
+          const isProduction = process.env.NODE_ENV === 'production';
+          response.cookie('AUTH', dataRedis, {
+            httpOnly: true,
+            maxAge: 10080 * 1000,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            path: '/',
+          });
+          await this.redisService.del(keyRedis);
+          return responseSuccess('Login user successfully!', 0, {
+            access_token: dataRedis,
+            data: decoded,
+          });
+        } catch (error: unknown) {
+          console.log(error);
+          return responseError('get accout user fail', 1);
+        }
         // }
         // return responseError('Login user fail!', 1);
       }
+      await this.redisService.del(keyRedis);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const token: string = req.cookies?.AUTH;
       if (!token) {
@@ -132,12 +133,6 @@ export class AuthService {
         where: { email: dataUser.email },
       });
       if (user) {
-        if (process.env.NODE_ENV === 'development') {
-          throw new HttpException(
-            { message: 'this email has been used error' },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
         return responseError('User is exist, fail!', 1);
       }
 
@@ -231,6 +226,7 @@ export class AuthService {
       }
       // generate access-token and refresh token
       const timeExpire = dataLogin.rememberUser ? '7d' : '1m';
+      const timeExpireCookie = dataLogin.rememberUser ? 10080 : 60 * 60;
       const RetimeExpire = dataLogin.rememberUser ? '7d' : '1m';
       const payload: ResponseLoginType = {
         userName: user.userName,
@@ -269,7 +265,7 @@ export class AuthService {
         const isProduction = process.env.NODE_ENV === 'production';
         response.cookie('AUTH', authValue, {
           httpOnly: true,
-          maxAge: 3600 * 1000,
+          maxAge: timeExpireCookie * 1000,
           secure: isProduction,
           sameSite: isProduction ? 'none' : 'lax',
           path: '/',
@@ -430,10 +426,9 @@ export class AuthService {
     response: Response,
     request: Request,
     title: string,
-  ): Promise<IResponse> {
+    sessionKey: string,
+  ) {
     try {
-      const ip = request.ip;
-      console.log('ip in oauth2: ', ip);
       //step check mail in file strategy
       let getMail: string | null = profile?.email ?? null; // check facebook not get mail
       console.log('mail: ', getMail);
@@ -477,42 +472,21 @@ export class AuthService {
         loginBy: title,
       };
       //step: create redis oauth of frontend write by nextjs
-      const keyRedis = `Oauth2-${ip}`;
+      const keyRedis = `Oauth2-${sessionKey}`;
       console.log('key oauth2: ', keyRedis);
-      console.log('payload oauth2: ', payload);
-      await this.redisService.set(keyRedis, payload, 60000);
       //step jwt and cookies
       const keyJWT = process.env.JWT_SECRET_KEY;
-      const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
+      // const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
       const accessToken = await this.jwtService.signAsync(payload, {
         secret: keyJWT,
-        expiresIn: '1h',
-      });
-      const resetToken: string = await this.jwtService.signAsync(payload, {
-        secret: keyJWTReset,
         expiresIn: '7d',
       });
-      // setup cookie client
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const decoded = await this.jwtService.verify(accessToken, {
-        secret: keyJWT,
-      });
-      if (decoded) {
-        const isProduction = process.env.NODE_ENV === 'production';
-        response.cookie('AUTH', accessToken, {
-          httpOnly: true,
-          maxAge: 3600 * 1000,
-          secure: isProduction,
-          sameSite: isProduction ? 'none' : 'lax',
-          path: '/',
-        });
-        return responseSuccess('Login user successfully!', 0, {
-          access_token: accessToken,
-          reset_token: resetToken,
-          data: payload,
-        });
-      }
-      return responseError('Login user fail!', 1);
+      // const resetToken: string = await this.jwtService.signAsync(payload, {
+      //   secret: keyJWTReset,
+      //   expiresIn: '7d',
+      // });
+      console.log('accessToken oauth2: ', accessToken);
+      await this.redisService.set(keyRedis, accessToken, 900000);
     } catch (error: unknown) {
       console.log(error);
       return responseError('login user fail', -500);

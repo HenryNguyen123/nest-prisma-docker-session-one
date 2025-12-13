@@ -32,14 +32,21 @@ interface ProfileType {
   lastName: string;
   picture: string;
 }
+interface MeType {
+  key: string;
+}
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
   //step0: call me
-  @Get('me')
-  async me(@Req() req: Request, @Res() response: Response): Promise<IResponse> {
+  @Post('me')
+  async me(
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+    @Body() body: MeType,
+  ): Promise<IResponse> {
     try {
-      const data = await this.authService.me(req, response);
+      const data = await this.authService.me(req, response, body);
       return data;
     } catch (error: unknown) {
       console.log('recall me, getjwt authentication: ', error);
@@ -49,32 +56,6 @@ export class AuthController {
   //step1: register user
   @Post('register')
   @UseInterceptors(FileInterceptor('avatar', { dest: 'tmp/' }))
-  // @UseInterceptors(
-  //   FileInterceptor('avatar', {
-  //     storage: diskStorage({
-  //       destination: (req, file, cb) => {
-  //         const uploadPath = join(
-  //           process.cwd(),
-  //           '..',
-  //           'public',
-  //           'images',
-  //           'avatar',
-  //         );
-  //         // tạo folder nếu chưa tồn tại
-  //         console.log('path disk: ', uploadPath);
-  //         if (!existsSync(uploadPath)) {
-  //           mkdirSync(uploadPath, { recursive: true });
-  //         }
-  //         cb(null, uploadPath);
-  //       },
-  //       filename: (req, file, cb) => {
-  //         const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-  //         const safeName = file.originalname.replace(/\s+/g, '-');
-  //         cb(null, `${unique}-${safeName}`);
-  //       },
-  //     }),
-  //   }),
-  // )
   async register(
     @Body() body: RegisterDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -205,12 +186,15 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
+      //step: set key session
+      const sessionKey: string = crypto.randomUUID();
+      console.log('sessionKey: ', sessionKey);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const profile: ProfileType = req?.user;
       if (!profile) {
         response.redirect(
           process.env.FRONTEND_URL + '/clients/auth/login' ||
-            'http://localhost:3000',
+            'http://localhost:9090',
         );
       }
       const title: string = 'google';
@@ -219,9 +203,11 @@ export class AuthController {
         response,
         request,
         title,
+        sessionKey,
       );
-      const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
-      response.redirect(path || 'http://localhost:3000');
+      const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}?key=${sessionKey}`;
+      console.log('path client: ', path);
+      response.redirect(path || 'http://localhost:9090');
     } catch (error: unknown) {
       let message = 'Internal server error';
       if (error instanceof Error) {
@@ -254,6 +240,8 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
+      //step: set key session
+      const sessionKey: string = crypto.randomUUID();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const profile: ProfileType = req.user;
       console.log('profile facebook: ', profile);
@@ -269,9 +257,10 @@ export class AuthController {
         response,
         request,
         title,
+        sessionKey,
       );
-      const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}`;
-      response.redirect(path || 'http://localhost:3000');
+      const path: string = `${process.env.FRONTEND_URL}${process.env.FRONTEND_CALLBACK_ME_URL}?key=${sessionKey}`;
+      response.redirect(path || 'http://localhost:9090');
     } catch (error: unknown) {
       console.log(error);
       if (process.env.NODE_ENV === 'development') {
@@ -281,7 +270,7 @@ export class AuthController {
         );
       }
       response.redirect(
-        process.env.FRONTEND_URL + '/login' || 'http://localhost:3000',
+        process.env.FRONTEND_URL + '/login' || 'http://localhost:9090',
       );
       return response.redirect(
         `${process.env.FRONTEND_URL}/login?error=unauthorized`,
