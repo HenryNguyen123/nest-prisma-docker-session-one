@@ -21,6 +21,7 @@ export const sendMail = async (props: sendMailType) => {
       html: props.html,
     };
     await sgMail.send(msg);
+    console.log('mail->>>>>>send');
   } catch (error: unknown) {
     console.log(error);
   }

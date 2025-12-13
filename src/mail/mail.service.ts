@@ -30,7 +30,9 @@ export class MailService {
   ): Promise<IResponse> {
     try {
       const keyParam: string = crypto.randomUUID();
+      console.log('key params: ', keyParam);
       const keyClient: string = `mail-${keyParam}`;
+      console.log('key keyClient: ', keyClient);
       //step: set redis
       //set count
       const count = (await this.redisService.incr(keyClient)) ?? 0;
@@ -73,6 +75,7 @@ export class MailService {
       } else {
         url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${keyClient}`;
       }
+      console.log('path client: ', url);
       if (process.env.NODE_ENV === 'development') {
         const props = {
           name: 'Reset Password',
@@ -84,6 +87,7 @@ export class MailService {
           subject: 'Reset Password',
           html: forgetPasswordHTML(props),
         };
+        console.log('data mail: ', dataMail);
         await sendMail(dataMail);
       }
       return responseSuccess('send mail forget password successfuly', 0, []);

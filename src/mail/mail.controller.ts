@@ -37,11 +37,6 @@ export class MailController {
         html: testMail(),
       };
       await sendMail(data);
-      // await this.mailerService.sendMail({
-      //   to: 'nhokkudo143@gmail.com',
-      //   subject: 'test send gmail.',
-      //   template: './test/testSendMail',
-      // });
       return responseSuccess('test send mail successfuly', 0, []);
     } catch (error: unknown) {
       console.log('send mail error: ', error);
