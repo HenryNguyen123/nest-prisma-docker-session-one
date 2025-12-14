@@ -76,21 +76,18 @@ export class MailService {
         url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${keyClient}`;
       }
       console.log('path client: ', url);
-      if (process.env.NODE_ENV === 'development') {
-        const props = {
-          name: 'Reset Password',
-          link: url,
-        };
-        const dataMail: sendMailType = {
-          mail: mailUser,
-          name: 'Reset Password',
-          subject: 'Reset Password',
-          // html: forgetPasswordHTML(props),
-          html: 'xin chao toi la xin chao xin chaooooooooooooooooo cac ban cac ban co biet la toi xin chao',
-        };
-        console.log('data mail: ', dataMail);
-        await sendMail(dataMail);
-      }
+      const props = {
+        name: '',
+        link: url,
+      };
+      const dataMail: sendMailType = {
+        mail: mailUser,
+        name: 'Reset Password',
+        subject: 'Reset Password',
+        html: forgetPasswordHTML(props),
+      };
+      console.log('data mail: ', dataMail);
+      await sendMail(dataMail);
       return responseSuccess('send mail forget password successfuly', 0, []);
     } catch (error: unknown) {
       console.log(error);
