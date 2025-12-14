@@ -333,14 +333,6 @@ export class AuthService {
   ): Promise<IResponse> {
     try {
       const keyParam: string = body.key;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const dataRedis: string = await this.redisService.get(keyParam);
-      if (!keyParam || dataRedis != keyParam) {
-        return responseError(
-          'The password reset link is invalid or has already been used.',
-          1,
-        );
-      }
       //step1: check verify jwt
       const key = process.env.JWT_SECRET_KEY_FORGOT_PASSWORD ?? '';
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -369,7 +361,18 @@ export class AuthService {
           1,
         );
       }
-      // step: check user
+      //step3: check redis
+      const rediskey: string = `reset-password-${email}`;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const dataRedis: string = await this.redisService.get(rediskey);
+      const keyRedisMatch: string = `check-key-redis-reset-passwords:${keyParam}`;
+      if (!keyParam || !dataRedis || dataRedis != keyRedisMatch) {
+        return responseError(
+          'The password reset link is invalid or has already been used.',
+          1,
+        );
+      }
+      // step4: check user
       const user = await this.prismaService.user.findUnique({
         where: { email: email },
       });
@@ -380,7 +383,7 @@ export class AuthService {
         );
       }
 
-      // step3: hash password and update password user
+      // step5: hash password and update password user
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const hashPass = await hashPassword(body.resetPassword);
       const data = await this.prismaService.user.update({

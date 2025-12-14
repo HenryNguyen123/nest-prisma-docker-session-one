@@ -30,8 +30,9 @@ export class MailService {
   ): Promise<IResponse> {
     try {
       const keyParam: string = crypto.randomUUID();
+      const mailUser: string = body.email;
       console.log('key params: ', keyParam);
-      const keyClient: string = `mail-${keyParam}`;
+      const keyClient: string = `reset-password-${mailUser}`;
       console.log('key keyClient: ', keyClient);
       //step: set redis
       //set count
@@ -42,8 +43,8 @@ export class MailService {
           1,
         );
       }
-      await this.redisService.set(keyClient, keyClient, 900000);
-      const mailUser: string = body.email;
+      const keyRedisMatch: string = `check-key-redis-reset-passwords:${keyParam}`;
+      await this.redisService.set(keyClient, keyRedisMatch, 900000);
       //step: check user
       const user = await this.prismaService.user.findUnique({
         where: { email: mailUser },
@@ -86,7 +87,6 @@ export class MailService {
         subject: 'Reset Password',
         html: forgetPasswordHTML(props),
       };
-      console.log('data mail: ', dataMail);
       await sendMail(dataMail);
       return responseSuccess('send mail forget password successfuly', 0, []);
     } catch (error: unknown) {
