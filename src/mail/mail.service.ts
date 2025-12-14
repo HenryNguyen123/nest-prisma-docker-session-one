@@ -39,7 +39,7 @@ export class MailService {
       const count = (await this.redisService.incr(keyClient)) ?? 0;
       if (count !== 1) {
         return responseError(
-          'Please check your email address and try again later, 15 minutes.',
+          'Please check "YOUR MAIL" address and try again later, 15 minutes.',
           2,
         );
       }
