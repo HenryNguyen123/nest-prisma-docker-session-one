@@ -63,7 +63,6 @@ export class MailController {
   ): Promise<IResponse> {
     try {
       //step1: clear cookie forgot password old
-      response.clearCookie('FORGETPASS');
       //step2: response api
       const data = await this.mailService.sendMailForgotPassword(
         body,

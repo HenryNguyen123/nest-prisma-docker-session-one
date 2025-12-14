@@ -29,22 +29,24 @@ export class MailService {
     res: Response,
   ): Promise<IResponse> {
     try {
-      const keyParam: string = crypto.randomUUID();
+      const numberParam: string = crypto.randomUUID();
       const mailUser: string = body.email;
-      console.log('key params: ', keyParam);
-      const keyClient: string = `reset-password-${mailUser}`;
-      console.log('key keyClient: ', keyClient);
+      const keyRedis: string = `key-redis-reset-password-${mailUser}`;
+      const pathKeyClient: string = `check-key-redis-reset-passwords:${numberParam}`;
       //step: set redis
       //set count
-      const count = (await this.redisService.incr(keyClient)) ?? 0;
-      if (count !== 1) {
+      // const count = (await this.redisService.incr(keyRedis)) ?? 0;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const checkRedis = await this.redisService.get(keyRedis);
+      if (checkRedis) {
+        console.log('check redis: ', checkRedis);
         return responseError(
           'Please check "YOUR MAIL" address and try again later, 15 minutes.',
           2,
         );
       }
-      const keyRedisMatch: string = `check-key-redis-reset-passwords:${keyParam}`;
-      await this.redisService.set(keyClient, keyRedisMatch, 900000);
+      console.log('mail: redis value: ', pathKeyClient);
+      await this.redisService.set(keyRedis, pathKeyClient, 15 * 60 * 1000);
       //step: check user
       const user = await this.prismaService.user.findUnique({
         where: { email: mailUser },
@@ -55,7 +57,7 @@ export class MailService {
       //step1: set data in token with jwt
       const key: string = process.env.JWT_SECRET_KEY_FORGOT_PASSWORD ?? '';
       const data = {
-        payload: { email: mailUser },
+        payload: { email: mailUser, key: numberParam },
         secret: key,
         expiresIn: 900,
       };
@@ -72,9 +74,9 @@ export class MailService {
       //step3: setup service email
       let url: string = '';
       if (isProduction) {
-        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${keyClient}`;
+        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${numberParam}`;
       } else {
-        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${keyClient}`;
+        url = `${process.env.FRONTEND_URL}${process.env.FRONTEND_FORGET_PASSWORD_URL}?key=${numberParam}`;
       }
       console.log('path client: ', url);
       const props = {

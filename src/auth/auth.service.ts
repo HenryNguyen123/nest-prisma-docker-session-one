@@ -354,6 +354,8 @@ export class AuthService {
       //step2: check  email
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const rawEmail = decode?.email ?? decode?.payload?.email;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const keyParamCookie = decode?.key ?? decode?.payload?.key;
       const email = String(rawEmail).trim();
       if (!email) {
         return responseError(
@@ -362,11 +364,11 @@ export class AuthService {
         );
       }
       //step3: check redis
-      const rediskey: string = `reset-password-${email}`;
+      const rediskey: string = `key-redis-reset-password-${email}`;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const dataRedis: string = await this.redisService.get(rediskey);
-      const keyRedisMatch: string = `check-key-redis-reset-passwords:${keyParam}`;
-      if (!keyParam || !dataRedis || dataRedis != keyRedisMatch) {
+      // const dataRedis: string = await this.redisService.get(rediskey);
+      // const keyRedisMatch: string = `check-key-redis-reset-passwords:${keyParam}`;
+      if (!keyParam || !keyParamCookie || keyParamCookie != keyParam) {
         return responseError(
           'The password reset link is invalid or has already been used.',
           1,
@@ -401,8 +403,8 @@ export class AuthService {
       //step5: send mail change password success
       if (data) {
         // await this.mailService.sendMailConfirmForgotPassword(email);
+        await this.redisService.del(rediskey);
       }
-      await this.redisService.del(keyParam);
       return responseSuccess(
         'Your password has been reset successfully. You can now log in with your new password.',
         0,
