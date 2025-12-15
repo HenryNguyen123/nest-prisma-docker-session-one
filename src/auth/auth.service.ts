@@ -154,7 +154,7 @@ export class AuthService {
           userName: dataUser.userName,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           password: hashPass,
-          phone: Number(dataUser.phone),
+          phone: dataUser.phone,
           firstName: dataUser.firstName ?? '',
           lastName: dataUser.lastName ?? '',
           avatar: avatarUrl,
@@ -403,8 +403,8 @@ export class AuthService {
       //step5: send mail change password success
       if (data) {
         // await this.mailService.sendMailConfirmForgotPassword(email);
-        await this.redisService.del(rediskey);
       }
+      await this.redisService.del(rediskey);
       return responseSuccess(
         'Your password has been reset successfully. You can now log in with your new password.',
         0,

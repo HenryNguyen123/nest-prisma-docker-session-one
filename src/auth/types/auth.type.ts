@@ -3,7 +3,7 @@ export interface RegisterType {
   email: string;
   userName: string;
   password: string;
-  phone?: number | null;
+  phone?: string | null;
   firstName: string;
   lastName: string;
   avatar?: string | null;
