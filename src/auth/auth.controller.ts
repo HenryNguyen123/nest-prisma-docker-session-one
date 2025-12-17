@@ -197,7 +197,7 @@ export class AuthController {
             'http://localhost:9090',
         );
       }
-      const title: string = 'google';
+      const title: string = 'GOOGLE';
       await this.authService.validateOauthLogin(
         profile,
         response,
@@ -251,7 +251,7 @@ export class AuthController {
             'http://localhost:3000',
         );
       }
-      const title: string = 'facebook';
+      const title: string = 'FACEBOOK';
       await this.authService.validateOauthLogin(
         profile,
         response,

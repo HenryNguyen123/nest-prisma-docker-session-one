@@ -17,6 +17,7 @@ import { verifyJWT } from '../utils/jwt/jwt.utils';
 import { MailService } from 'src/mail/mail.service';
 import { RateLimitedLoginService } from 'src/rate-limited/rate-limited-login.service';
 import { RedisService } from 'src/redis/redis.service';
+import { Provider } from '@prisma/client';
 
 interface ProfileType {
   email: string;
@@ -147,7 +148,13 @@ export class AuthService {
         avatarUrl = multerImg;
       }
       // step4: create user
-      const roleId: number = 3;
+      const role = await this.prismaService.role.findUnique({
+        where: { code: 'USER' },
+      });
+      if (!role) {
+        return responseError('Role USER not found', 2);
+      }
+      const roleId = role.id;
       const res: RegisterType = await this.prismaService.user.create({
         data: {
           email: dataUser.email,
@@ -161,6 +168,11 @@ export class AuthService {
           age: dataUser.age ? parseInt(dataUser.age.toString()) : null,
           dob: dataUser.dob ? new Date(dataUser.dob) : undefined,
           roleId: roleId,
+          profile: {
+            create: {
+              bio: 'Normal user profile',
+            },
+          },
         },
       });
       return responseSuccess('created user successfully!', 0, res);
@@ -197,7 +209,7 @@ export class AuthService {
       // check user
       const user = await this.prismaService.user.findUnique({
         where: { userName: dataLogin.userName },
-        include: { role: true },
+        include: { role: true, profile: true },
       });
       if (!user) {
         return responseError('Nothing find user, fail', 1);
@@ -236,7 +248,8 @@ export class AuthService {
         age: user.age,
         roleId: user.role?.id ?? 3,
         roleCode: user.role?.code ?? '',
-        loginBy: '',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        loginBy: user.profile?.provider ?? 'LOCAL',
       };
       const keyJWT = process.env.JWT_SECRET_KEY;
       const keyJWTReset = process.env.JWT_SECRET_KEY_RESET ?? '';
@@ -437,10 +450,22 @@ export class AuthService {
       //step check have user in database
       let user = await this.prismaService.user.findUnique({
         where: { email: getMail },
-        include: { role: true },
+        include: { role: true, profile: true },
       });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      let getProvider: Provider = Provider.LOCAL;
+      if (title) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        getProvider = Provider.OAUTH;
+      }
       if (!user) {
-        const roleId: number = 3;
+        const role = await this.prismaService.role.findUnique({
+          where: { code: 'USER' },
+        });
+        if (!role) {
+          return responseError('Role USER not found', 2);
+        }
+        const roleId = role.id;
         const passClient: string =
           process.env.PASSWORD_CLIENT_HASH_CODE ?? profile.firstName;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -454,8 +479,15 @@ export class AuthService {
             lastName: profile.lastName,
             avatar: profile.picture,
             roleId: roleId,
+            profile: {
+              create: {
+                bio: 'Normal user profile',
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                provider: getProvider,
+              },
+            },
           },
-          include: { role: true },
+          include: { role: true, profile: true },
         });
       }
       // generate access-token and refresh token
@@ -467,7 +499,8 @@ export class AuthService {
         age: user.age,
         roleId: user.roleId,
         roleCode: user.role?.code ?? '',
-        loginBy: title,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        loginBy: user.profile?.provider ?? Provider.OAUTH,
       };
       //step: create redis oauth of frontend write by nextjs
       const keyRedis = `Oauth2-${sessionKey}`;

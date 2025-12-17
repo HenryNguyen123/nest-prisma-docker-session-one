@@ -22,58 +22,63 @@ model User {
   isVerify  Boolean   @default(false)
   isActive  Boolean   @default(true)
 
-  roleId    Int
-  role      Role      @relation(fields: [roleId], references: [id])
+  roleId Int
+  role   Role @relation(fields: [roleId], references: [id])
 
-  posts     Post[]
-  profile   Profile?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model Profile {
-  id        Int      @id @default(autoincrement())
-  bio       String?
-  isActive  Boolean  @default(true)
-
-  userId    Int      @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts   Post[]
+  profile Profile?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Profile {
+  id       Int      @id @default(autoincrement())
+  bio      String?
+  isActive Boolean  @default(true)
+  provider Provider @default(LOCAL)
+  userId   Int      @unique
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Provider {
+  LOCAL
+  OAUTH
+}
+
 model Post {
-  id        Int       @id @default(autoincrement())
-  title     String
-  slug      String    @unique
-  content   String?
-  view      Int       @default(0)
-  isActive  Boolean   @default(true)
+  id       Int     @id @default(autoincrement())
+  title    String
+  slug     String  @unique
+  content  String?
+  view     Int     @default(0)
+  isActive Boolean @default(true)
 
-  authorId  Int
-  author    User      @relation(fields: [authorId], references: [id])
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
 
-  images    PostImage[]
-  tags      PostTag[]
+  images PostImage[]
+  tags   PostTag[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([authorId])
   @@index([createdAt])
 }
 
 model PostImage {
-  id        Int      @id @default(autoincrement())
-  url       String
-  order     Int?
-  isCover   Boolean  @default(false)
-  isActive  Boolean  @default(true)
+  id       Int     @id @default(autoincrement())
+  url      String
+  order    Int?
+  isCover  Boolean @default(false)
+  isActive Boolean @default(true)
 
-  postId    Int
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -81,12 +86,12 @@ model PostImage {
 }
 
 model Tag {
-  id        Int      @id @default(autoincrement())
-  name      String
-  slug      String   @unique
-  isActive  Boolean  @default(true)
+  id       Int     @id @default(autoincrement())
+  name     String
+  slug     String  @unique
+  isActive Boolean @default(true)
 
-  posts     PostTag[]
+  posts PostTag[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -96,22 +101,22 @@ model PostTag {
   postId Int
   tagId  Int
 
-  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([postId, tagId])
   @@index([tagId])
 }
 
 model Role {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
   name        String
   description String?
-  isActive    Boolean  @default(true)
+  isActive    Boolean @default(true)
 
-  user        User[]
+  user User[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
